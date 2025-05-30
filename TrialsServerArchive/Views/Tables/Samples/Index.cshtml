@@ -1,0 +1,214 @@
+﻿@using TrialsServerArchive.Models.Objects;
+@model IEnumerable<Sample>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+
+@{
+    ViewData["Title"] = "Образцы";
+}
+
+<h1>Образцы</h1>
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <div class="mb-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+            <i class="bi bi-plus-circle"></i> Создать образец
+        </button>
+        <button class="btn btn-secondary" id="groupBtn" disabled>
+            <i class="bi bi-collection"></i> Группировать
+        </button>
+        <button class="btn btn-success" id="moveToTrialBtn" disabled>
+            <i class="bi bi-arrow-right"></i> Перевести в испытанные
+        </button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAll" />
+                        </th>
+                    }
+                    <th>Название</th>
+                    <th>Серия</th>
+                    <th>Дата создания</th>
+                    <th>Дата производства</th>
+                    <th>Срок (дней)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <td>
+                                <input type="checkbox" class="rowCheckbox" data-id="@item.Id" />
+                            </td>
+                        }
+                        <td>@item.Name</td>
+                        <td>@item.SeriesName</td>
+                        <td>@item.SampleCreationDate.ToString("d")</td>
+                        <td>@item.ManufactureDate.ToString("d")</td>
+                        <td>@item.GetAge(DateTime.Today)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <!-- Модальное окно создания образца -->
+    <div class="modal fade" id="createModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="CreateSample" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Создать образец</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Название образца</label>
+                            <input type="text" class="form-control" name="Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Серия</label>
+                            <input type="text" class="form-control" name="SeriesName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ID серии</label>
+                            <input type="number" class="form-control" name="SeriesId">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата создания</label>
+                            <input type="date" class="form-control" name="SampleCreationDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата производства</label>
+                            <input type="date" class="form-control" name="ManufactureDate" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно группировки -->
+    <div class="modal fade" id="groupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="GroupSamples" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Группировать образцы</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="ids" id="groupIds">
+                        <div class="mb-3">
+                            <label class="form-label">Название серии</label>
+                            <input type="text" class="form-control" name="seriesName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ID серии</label>
+                            <input type="number" class="form-control" name="seriesId" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Группировать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно перевода в испытанные -->
+    <div class="modal fade" id="trialModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="MoveToTrials" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Перевод в испытанные</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="ids" id="trialIds">
+                        <div class="mb-3">
+                            <label class="form-label">Оснастка</label>
+                            <select class="form-select" name="toolingIds" multiple required size="5">
+                                @foreach (var tooling in ViewBag.Toolings)
+                                {
+                                    <option value="@tooling.Id">@tooling.Name</option>
+                                }
+                            </select>
+                            <small class="form-text text-muted">
+                                Удерживайте Ctrl для выбора нескольких элементов
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата испытания</label>
+                            <input type="date" class="form-control" name="testingDate"
+                                   value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Перевести</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+    <script>
+        $(function () {
+            // Выбор/снятие всех чекбоксов
+            $('#selectAll').change(function () {
+                $('.rowCheckbox').prop('checked', this.checked);
+                updateButtons();
+            });
+
+            // Обновление состояния кнопок при изменении выбора
+            $('.rowCheckbox').change(updateButtons);
+
+            function updateButtons() {
+                const checkedCount = $('.rowCheckbox:checked').length;
+                $('#groupBtn').prop('disabled', checkedCount === 0);
+                $('#moveToTrialBtn').prop('disabled', checkedCount === 0);
+            }
+
+            // Открытие модалки группировки
+            $('#groupBtn').click(function () {
+                const ids = $('.rowCheckbox:checked').map(function () {
+                    return $(this).data('id');
+                }).get();
+                $('#groupIds').val(ids.join(','));
+                $('#groupModal').modal('show');
+            });
+
+            // Открытие модалки перевода в испытанные
+            $('#moveToTrialBtn').click(function () {
+                const ids = $('.rowCheckbox:checked').map(function () {
+                    return $(this).data('id');
+                }).get();
+                $('#trialIds').val(ids.join(','));
+                $('#trialModal').modal('show');
+            });
+        });
+    </script>
+    }
+}
