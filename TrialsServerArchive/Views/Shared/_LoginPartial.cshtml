@@ -7,23 +7,34 @@
     {
         <li class="nav-item">
             <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
-                Привет, @User.Identity?.Name!
+                <i class="bi bi-person-circle"></i>
+                @{
+                    var user = await UserManager.GetUserAsync(User);
+                    var displayName = user?.FullName ?? User.Identity?.Name;
+                }
+                @displayName
             </a>
         </li>
         <li class="nav-item">
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout"
                   asp-route-returnUrl="@Url.Action("Index", "Home")">
-                <button type="submit" class="nav-link btn btn-link text-dark">Выйти</button>
+                <button type="submit" class="nav-link btn btn-link text-dark">
+                    <i class="bi bi-box-arrow-right"></i> Выйти
+                </button>
             </form>
         </li>
     }
     else
     {
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Регистрация</a>
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">
+                <i class="bi bi-person-plus"></i> Регистрация
+            </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Войти</a>
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">
+                <i class="bi bi-box-arrow-in-right"></i> Войти
+            </a>
         </li>
     }
 </ul>

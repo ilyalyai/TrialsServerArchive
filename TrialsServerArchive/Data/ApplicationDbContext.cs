@@ -5,10 +5,8 @@ using TrialsServerArchive.Models.Objects;
 
 namespace TrialsServerArchive.Data
 {
-    public class AppDbContext : IdentityDbContext<ApplicationUser>
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
         public DbSet<BaseObject> Objects { get; set; }
         public DbSet<Tooling> Toolings { get; set; }
 
