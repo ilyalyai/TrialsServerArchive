@@ -24,8 +24,10 @@ using Microsoft.EntityFrameworkCore;
 using TrialsServerArchive.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://*:2310");
 
 // ��������� �������� ���� ������
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
