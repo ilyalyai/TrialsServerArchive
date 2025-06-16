@@ -6,23 +6,40 @@ using TrialsServerArchive.Models.Objects;
 [Authorize]
 public class ToolingController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public ToolingController(AppDbContext context) => _context = context;
+    public ToolingController(ApplicationDbContext context) => _context = context;
 
     public IActionResult Index() => View(_context.Toolings.ToList());
 
     [HttpPost]
     public IActionResult Create(Tooling tooling)
     {
-        if (ModelState.IsValid)
+        try
         {
             tooling.CreatedBy = User.Identity?.Name ?? "System";
-            tooling.ReconciliationDate = DateTime.Now;
-            _context.Toolings.Add(tooling);
-            _context.SaveChanges();
+            tooling.ReconciliationDate = DateTime.UtcNow;
+            ModelState.ClearValidationState(nameof(tooling));
+            if (TryValidateModel(tooling, nameof(tooling)))
+            {
+                _context.Toolings.Add(tooling);
+                _context.SaveChanges();
+                return RedirectToAction(nameof(Index));
+            }
+            // Лог ошибок валидации
+            foreach (var modelState in ModelState.Values)
+            {
+                foreach (var error in modelState.Errors)
+                {
+                    Console.WriteLine($"Ошибка валидации: {error.ErrorMessage}");
+                }
+            }
             return RedirectToAction(nameof(Index));
         }
-        return View(tooling);
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка сохранения: {ex.Message}");
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

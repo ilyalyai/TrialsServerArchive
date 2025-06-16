@@ -1,15 +1,15 @@
-using Microsoft.AspNetCore.Identity;
+п»їusing Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
-using TrialsServerArchive.Data; // Добавьте это пространство имен
+using TrialsServerArchive.Data;
 
 namespace TrialsServerArchive.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly UserManager<ApplicationUser> _userManager; // Добавлено
+        private readonly UserManager<ApplicationUser> _userManager; // Р”РѕР±Р°РІР»РµРЅРѕ
         private readonly ILogger<RegisterModel> _logger;
 
         public RegisterModel(
@@ -17,7 +17,7 @@ namespace TrialsServerArchive.Areas.Identity.Pages.Account
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger)
         {
-            _userManager = userManager; // Инициализация
+            _userManager = userManager; // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ
             _signInManager = signInManager;
             _logger = logger;
         }
@@ -29,22 +29,22 @@ namespace TrialsServerArchive.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required(ErrorMessage = "ФИО обязательно")]
-            [Display(Name = "ФИО")]
-            public string FullName { get; set; }
+            [Required(ErrorMessage = "Р¤РРћ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ")]
+            [Display(Name = "Р¤РРћ")]
+            public required string FullName { get; set; }
 
-            [Required(ErrorMessage = "Логин обязателен")]
-            [Display(Name = "Логин")]
-            public string UserName { get; set; }
+            [Required(ErrorMessage = "Р›РѕРіРёРЅ РѕР±СЏР·Р°С‚РµР»РµРЅ")]
+            [Display(Name = "Р›РѕРіРёРЅ")]
+            public required string UserName { get; set; }
 
-            [Display(Name = "Пароль")]
+            [Display(Name = "РџР°СЂРѕР»СЊ")]
             [DataType(DataType.Password)]
-            public string Password { get; set; }
+            public required string Password { get; set; }
 
-            [Display(Name = "Подтверждение пароля")]
+            [Display(Name = "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РїР°СЂРѕР»СЏ")]
             [DataType(DataType.Password)]
-            [Compare("Password", ErrorMessage = "Пароли не совпадают")]
-            public string ConfirmPassword { get; set; }
+            [Compare("Password", ErrorMessage = "РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚")]
+            public required string ConfirmPassword { get; set; }
         }
 
         public void OnGet(string returnUrl = null)
@@ -68,7 +68,7 @@ namespace TrialsServerArchive.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Пользователь создал новую учетную запись.");
+                    _logger.LogInformation("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃРѕР·РґР°Р» РЅРѕРІСѓСЋ СѓС‡РµС‚РЅСѓСЋ Р·Р°РїРёСЃСЊ.");
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return LocalRedirect(returnUrl);
                 }

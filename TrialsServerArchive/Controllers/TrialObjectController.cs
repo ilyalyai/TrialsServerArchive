@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 [Authorize]
 public class TrialsController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public TrialsController(AppDbContext context) => _context = context;
+    public TrialsController(ApplicationDbContext context) => _context = context;
 
     public IActionResult Index()
     {
@@ -42,7 +42,7 @@ public class TrialsController : Controller
                 TestingDate = trial.TestingDate,
 
                 // Уникальные свойства
-                ArchiveDate = DateTime.Now,
+                ArchiveDate = DateTime.UtcNow,
                 ArchivedBy = User.Identity.Name
             };
 

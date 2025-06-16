@@ -1,17 +1,40 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TrialsServerArchive.Models;
 using TrialsServerArchive.Models.Objects;
 
 namespace TrialsServerArchive.Data
 {
-    public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+        // DbSet для ваших сущностей
         public DbSet<BaseObject> Objects { get; set; }
         public DbSet<Tooling> Toolings { get; set; }
+        public DbSet<TrialTooling> TrialToolings { get; set; }
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime) ||
+                        property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(new ValueConverter<DateTime, DateTime>(
+                            v => DateTime.SpecifyKind(v, DateTimeKind.Utc),
+                            v => v
+                        ));
+                    }
+                }
+            }
+
             base.OnModelCreating(modelBuilder);
 
             // Настройка TPH для иерархии объектов
@@ -35,7 +58,5 @@ namespace TrialsServerArchive.Data
                 .WithMany(t => t.TrialLinks)
                 .HasForeignKey(tt => tt.ToolingId);
         }
-
-        public DbSet<TrialTooling> TrialToolings { get; set; }
     }
 }

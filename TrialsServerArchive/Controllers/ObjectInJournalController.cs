@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 public class JournalController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public JournalController(AppDbContext context) => _context = context;
+    public JournalController(ApplicationDbContext context) => _context = context;
 
     public IActionResult Index()
     {

@@ -6,9 +6,9 @@ using TrialsServerArchive.Models.Objects;
 [Authorize]
 public class SamplesController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public SamplesController(AppDbContext context) => _context = context;
+    public SamplesController(ApplicationDbContext context) => _context = context;
 
     public IActionResult Index()
     {
@@ -19,9 +19,33 @@ public class SamplesController : Controller
     [HttpPost]
     public IActionResult CreateSample(Sample sample)
     {
-        _context.Objects.Add(sample);
-        _context.SaveChanges();
-        return RedirectToAction("Index");
+        try
+        {
+            if (ModelState.IsValid)
+            {
+                // Приведение дат к UTC
+                sample.SampleCreationDate = DateTime.SpecifyKind(sample.SampleCreationDate, DateTimeKind.Utc);
+                sample.ManufactureDate = DateTime.SpecifyKind(sample.ManufactureDate, DateTimeKind.Utc);
+
+                _context.Objects.Add(sample);
+                _context.SaveChanges();
+                return RedirectToAction(nameof(Index));
+            }
+            // Лог ошибок валидации
+            foreach (var modelState in ModelState.Values)
+            {
+                foreach (var error in modelState.Errors)
+                {
+                    Console.WriteLine($"Ошибка валидации: {error.ErrorMessage}");
+                }
+            }
+            return View(sample);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка сохранения: {ex.Message}");
+            return View(sample);
+        }
     }
 
     [HttpPost]

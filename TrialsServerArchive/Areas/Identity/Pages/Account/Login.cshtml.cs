@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Identity;
+п»їusing Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
-using TrialsServerArchive.Data; // Убедитесь, что это пространство имен подключено
+using TrialsServerArchive.Data;
 
 namespace TrialsServerArchive.Areas.Identity.Pages.Account
 {
@@ -29,15 +29,15 @@ namespace TrialsServerArchive.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required(ErrorMessage = "Логин обязателен")]
-            [Display(Name = "Логин")]
+            [Required(ErrorMessage = "Р›РѕРіРёРЅ РѕР±СЏР·Р°С‚РµР»РµРЅ")]
+            [Display(Name = "Р›РѕРіРёРЅ")]
             public string UserName { get; set; }
 
-            [Display(Name = "Пароль")]
+            [Display(Name = "РџР°СЂРѕР»СЊ")]
             [DataType(DataType.Password)]
             public string Password { get; set; }
 
-            [Display(Name = "Запомнить меня?")]
+            [Display(Name = "Р—Р°РїРѕРјРЅРёС‚СЊ РјРµРЅСЏ?")]
             public bool RememberMe { get; set; }
         }
 
@@ -65,12 +65,12 @@ namespace TrialsServerArchive.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Пользователь вошел в систему.");
+                    _logger.LogInformation("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІРѕС€РµР» РІ СЃРёСЃС‚РµРјСѓ.");
                     return LocalRedirect(returnUrl);
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Неверная попытка входа");
+                    ModelState.AddModelError(string.Empty, "РќРµРІРµСЂРЅР°СЏ РїРѕРїС‹С‚РєР° РІС…РѕРґР°");
                     return Page();
                 }
             }
