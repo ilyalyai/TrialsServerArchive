@@ -1,10 +1,13 @@
 ﻿using TrialsServerArchive.Models.Objects;
 
-public class TrialTooling
+namespace TrialsServerArchive.Models
 {
-    public int TrialObjectId { get; set; }
-    public TrialObject TrialObject { get; set; }
+    public class TrialTooling
+    {
+        public int TrialObjectId { get; set; }
+        public TrialObject TrialObject { get; set; }
 
-    public int ToolingId { get; set; }
-    public Tooling Tooling { get; set; }
+        public int ToolingId { get; set; }
+        public Tooling Tooling { get; set; }
+    }
 }

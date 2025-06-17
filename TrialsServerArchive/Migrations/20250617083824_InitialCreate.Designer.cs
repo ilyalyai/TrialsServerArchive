@@ -12,7 +12,7 @@ using TrialsServerArchive.Data;
 namespace TrialsServerArchive.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250616075336_InitialCreate")]
+    [Migration("20250617083824_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -232,21 +232,6 @@ namespace TrialsServerArchive.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("TrialTooling", b =>
-                {
-                    b.Property<int>("TrialObjectId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ToolingId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("TrialObjectId", "ToolingId");
-
-                    b.HasIndex("ToolingId");
-
-                    b.ToTable("TrialToolings");
-                });
-
             modelBuilder.Entity("TrialsServerArchive.Models.Objects.BaseObject", b =>
                 {
                     b.Property<int>("Id")
@@ -254,6 +239,10 @@ namespace TrialsServerArchive.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -266,9 +255,6 @@ namespace TrialsServerArchive.Migrations
 
                     b.Property<DateTime>("SampleCreationDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("SeriesId")
-                        .HasColumnType("integer");
 
                     b.Property<string>("SeriesName")
                         .IsRequired()
@@ -283,7 +269,7 @@ namespace TrialsServerArchive.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("TrialsServerArchive.Models.Objects.Tooling", b =>
+            modelBuilder.Entity("TrialsServerArchive.Models.Tooling", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -309,6 +295,21 @@ namespace TrialsServerArchive.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Toolings");
+                });
+
+            modelBuilder.Entity("TrialsServerArchive.Models.TrialTooling", b =>
+                {
+                    b.Property<int>("TrialObjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ToolingId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("TrialObjectId", "ToolingId");
+
+                    b.HasIndex("ToolingId");
+
+                    b.ToTable("TrialToolings");
                 });
 
             modelBuilder.Entity("TrialsServerArchive.Models.Objects.Sample", b =>
@@ -402,9 +403,9 @@ namespace TrialsServerArchive.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TrialTooling", b =>
+            modelBuilder.Entity("TrialsServerArchive.Models.TrialTooling", b =>
                 {
-                    b.HasOne("TrialsServerArchive.Models.Objects.Tooling", "Tooling")
+                    b.HasOne("TrialsServerArchive.Models.Tooling", "Tooling")
                         .WithMany("TrialLinks")
                         .HasForeignKey("ToolingId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -421,7 +422,7 @@ namespace TrialsServerArchive.Migrations
                     b.Navigation("TrialObject");
                 });
 
-            modelBuilder.Entity("TrialsServerArchive.Models.Objects.Tooling", b =>
+            modelBuilder.Entity("TrialsServerArchive.Models.Tooling", b =>
                 {
                     b.Navigation("TrialLinks");
                 });

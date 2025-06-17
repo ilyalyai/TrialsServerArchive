@@ -12,20 +12,21 @@
         /// </summary>
         public string SeriesName { get; set; }
 
-        /// <summary>
-        /// id серии в базе
-        /// </summary>
-        public int SeriesId { get; set; }
 
         /// <summary>
         /// Имя образца
         /// </summary>
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Дата создания образца
         /// </summary>s
         public DateTime SampleCreationDate { get; set; }
+
+        /// <summary>
+        /// Создатель образца
+        /// </summary>s
+        public string CreatedBy { get; set; } = "System";
 
         /// <summary>
         /// Сколько времени прошло с даты создания 

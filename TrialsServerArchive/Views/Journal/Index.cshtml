@@ -1,5 +1,4 @@
-﻿@using TrialsServerArchive.Models.Objects;
-@model IEnumerable<ObjectInJournal>
+﻿@model X.PagedList.IPagedList<ObjectInJournal>
 
 @{
     ViewData["Title"] = "Журнал образцов";
@@ -52,4 +51,17 @@
             </tbody>
         </table>
     </div>
+</div>
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(
+            Model,
+            page => Url.Action("Index", new { page }),
+            new PagedListRenderOptions
+    {
+        LiElementClasses = new[] { "page-item" },
+        PageClasses = new[] { "page-link" },
+        UlElementClasses = new[] { "pagination" },
+        MaximumPageNumbersToDisplay = 5
+    }
+            )
 </div>

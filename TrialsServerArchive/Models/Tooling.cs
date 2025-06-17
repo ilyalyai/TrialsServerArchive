@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using TrialsServerArchive.Models.Objects;
 
-namespace TrialsServerArchive.Models.Objects
+namespace TrialsServerArchive.Models
 {
     /// <summary>
     /// Оснастка - используется при испытаниях образцов
@@ -17,7 +18,7 @@ namespace TrialsServerArchive.Models.Objects
 
         public DateTime ReconciliationDate { get; set; }
         // Изменяем тип навигационного свойства
-        public ICollection<TrialTooling> TrialLinks { get; set; } = new List<TrialTooling>();
+        public ICollection<TrialTooling> TrialLinks { get; set; } = [];
 
         [NotMapped] // Не сохраняется в БД, только для удобства доступа
         public IEnumerable<TrialObject> TrialObjects => TrialLinks.Select(tt => tt.TrialObject);

@@ -1,6 +1,4 @@
-﻿@using TrialsServerArchive.Models.Objects;
-@model IEnumerable<Tooling>
-@using Microsoft.AspNetCore.Identity
+﻿@model X.PagedList.IPagedList<Tooling>
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
@@ -42,6 +40,19 @@
             </tbody>
         </table>
     </div>
+</div>
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(
+            Model,
+            page => Url.Action("Index", new { page }),
+            new PagedListRenderOptions
+    {
+        LiElementClasses = new[] { "page-item" },
+        PageClasses = new[] { "page-link" },
+        UlElementClasses = new[] { "pagination" },
+        MaximumPageNumbersToDisplay = 5
+    }
+            )
 </div>
 
 @if (SignInManager.IsSignedIn(User))

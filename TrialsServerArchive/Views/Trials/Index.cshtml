@@ -1,6 +1,4 @@
-﻿@using TrialsServerArchive.Models.Objects;
-@model IEnumerable<TrialObject>
-@using Microsoft.AspNetCore.Identity
+﻿@model X.PagedList.IPagedList<TrialObject>
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
@@ -41,6 +39,12 @@
                 @foreach (var item in Model)
                 {
                     <tr>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <td>
+                                <input type="checkbox" class="rowCheckbox" data-id="@item.Id" />
+                            </td>
+                        }
                         <td>@item.Name</td>
                         <td>@item.SeriesName</td>
                         <td>@item.SampleCreationDate.ToString("d")</td>
@@ -66,6 +70,19 @@
             </tbody>
         </table>
     </div>
+</div>
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(
+            Model,
+            page => Url.Action("Index", new { page }),
+            new PagedListRenderOptions
+    {
+        LiElementClasses = new[] { "page-item" },
+        PageClasses = new[] { "page-link" },
+        UlElementClasses = new[] { "pagination" },
+        MaximumPageNumbersToDisplay = 5
+    }
+            )
 </div>
 
 @if (SignInManager.IsSignedIn(User))
@@ -94,21 +111,24 @@
 
     @section Scripts {
     <script>
-        $(function() {
-            $('#selectAll').change(function() {
+        $(function () {
+            // Выбор всех/снятие всех чекбоксов
+            $('#selectAll').change(function () {
                 $('.rowCheckbox').prop('checked', this.checked);
-                updateButton();
+                updateButtons();
             });
 
-            $('.rowCheckbox').change(updateButton);
+            // Обновление состояния кнопок
+            $('.rowCheckbox').change(updateButtons);
 
-            function updateButton() {
+            function updateButtons() {
                 const checkedCount = $('.rowCheckbox:checked').length;
                 $('#moveToJournalBtn').prop('disabled', checkedCount === 0);
             }
 
-            $('#moveToJournalBtn').click(function() {
-                const ids = $('.rowCheckbox:checked').map(function() {
+            // Открытие модалки перевода в журнал
+            $('#moveToJournalBtn').click(function () {
+                const ids = $('.rowCheckbox:checked').map(function () {
                     return $(this).data('id');
                 }).get();
                 $('#journalIds').val(ids.join(','));

@@ -60,9 +60,9 @@ namespace TrialsServerArchive.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     SeriesName = table.Column<string>(type: "text", nullable: false),
-                    SeriesId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     SampleCreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedBy = table.Column<string>(type: "text", nullable: false),
                     ObjectType = table.Column<string>(type: "character varying(21)", maxLength: 21, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ManufactureDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
