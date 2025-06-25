@@ -1,0 +1,79 @@
+﻿@inject SignInManager<ApplicationUser> SignInManager
+@model Sample
+
+<div class="row">
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">ID:</dt>
+            <dd class="col-sm-8">@Model.Id</dd>
+
+            <dt class="col-sm-4">Название:</dt>
+            <dd class="col-sm-8">@Model.Name</dd>
+
+            <dt class="col-sm-4">Серия:</dt>
+            <dd class="col-sm-8">@Model.SeriesName</dd>
+
+            <dt class="col-sm-4">Дата создания:</dt>
+            <dd class="col-sm-8">@Model.SampleCreationDate.ToString("d")</dd>
+
+            <dt class="col-sm-4">Дата производства:</dt>
+            <dd class="col-sm-8">@Model.ManufactureDate.ToString("d")</dd>
+        </dl>
+    </div>
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">Срок (дней):</dt>
+            <dd class="col-sm-8">@Model.GetAge(DateTime.Today)</dd>
+
+            <dt class="col-sm-4">Создал:</dt>
+            <dd class="col-sm-8">@Model.CreatedBy</dd>
+        </dl>
+    </div>
+</div>
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <div class="mt-4">
+        <h5>Редактирование</h5>
+        <form id="updateSampleForm">
+            <input type="hidden" name="Id" value="@Model.Id" />
+
+            <div class="mb-3">
+                <label class="form-label">Название</label>
+                <input type="text" class="form-control" name="Name" value="@Model.Name" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Серия</label>
+                <input type="text" class="form-control" name="SeriesName" value="@Model.SeriesName">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Дата создания</label>
+                <input type="date" class="form-control" name="SampleCreationDate"
+                       value="@Model.SampleCreationDate.ToString("yyyy-MM-dd")" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Дата производства</label>
+                <input type="date" class="form-control" name="ManufactureDate"
+                       value="@Model.ManufactureDate.ToString("yyyy-MM-dd")" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+    </div>
+
+    <script>
+        $(function() {
+            $('#updateSampleForm').submit(function(e) {
+                e.preventDefault();
+                $.post('@Url.Action("UpdateSample", "Samples")', $(this).serialize(), function() {
+                    alert('Изменения сохранены');
+                    $('#detailsModal').modal('hide');
+                    location.reload();
+                });
+            });
+        });
+    </script>
+}

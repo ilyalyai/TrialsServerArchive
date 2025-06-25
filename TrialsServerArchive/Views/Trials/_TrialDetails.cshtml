@@ -1,0 +1,99 @@
+﻿@inject SignInManager<ApplicationUser> SignInManager
+@model TrialObject
+
+<div class="row">
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">ID:</dt>
+            <dd class="col-sm-8">@Model.Id</dd>
+
+            <dt class="col-sm-4">Название:</dt>
+            <dd class="col-sm-8">@Model.Name</dd>
+
+            <dt class="col-sm-4">Серия:</dt>
+            <dd class="col-sm-8">@Model.SeriesName</dd>
+
+            <dt class="col-sm-4">Дата создания:</dt>
+            <dd class="col-sm-8">@Model.SampleCreationDate.ToString("d")</dd>
+
+            <dt class="col-sm-4">Дата испытания:</dt>
+            <dd class="col-sm-8">@Model.TestingDate.ToString("d")</dd>
+        </dl>
+    </div>
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">ID образца:</dt>
+            <dd class="col-sm-8">@Model.SampleId</dd>
+
+            <dt class="col-sm-4">Срок до испытания:</dt>
+            <dd class="col-sm-8">@Model.GetAge(Model.TestingDate) дней</dd>
+
+            <dt class="col-sm-4">Оснастка:</dt>
+            <dd class="col-sm-8">
+                @if (Model.ToolingLinks.Any())
+                {
+                    <ul>
+                        @foreach (var link in Model.ToolingLinks)
+                        {
+                            <li>@link.Tooling.Name</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <span>Не указана</span>
+                }
+            </dd>
+
+            <dt class="col-sm-4">Создал:</dt>
+            <dd class="col-sm-8">@Model.CreatedBy</dd>
+        </dl>
+    </div>
+</div>
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <div class="mt-4">
+        <h5>Редактирование</h5>
+        <form id="updateTrialForm">
+            <input type="hidden" name="Id" value="@Model.Id" />
+
+            <div class="mb-3">
+                <label class="form-label">Название</label>
+                <input type="text" class="form-control" name="Name" value="@Model.Name" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Серия</label>
+                <input type="text" class="form-control" name="SeriesName" value="@Model.SeriesName">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Дата создания</label>
+                <input type="date" class="form-control" name="SampleCreationDate"
+                       value="@Model.SampleCreationDate.ToString("yyyy-MM-dd")" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Дата испытания</label>
+                <input type="date" class="form-control" name="TestingDate"
+                       value="@Model.TestingDate.ToString("yyyy-MM-dd")" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+    </div>
+
+    <script>
+        $(function() {
+            $('#updateTrialForm').submit(function(e) {
+                e.preventDefault();
+                $.post('@Url.Action("UpdateTrial", "Trials")', $(this).serialize(), function() {
+                    alert('Изменения сохранены');
+                    $('#detailsModal').modal('hide');
+                    location.reload();
+                });
+            });
+        });
+    </script>
+}

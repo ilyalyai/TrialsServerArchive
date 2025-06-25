@@ -4,54 +4,76 @@
     ViewData["Title"] = "Журнал образцов";
 }
 
+<style>
+    .group-header {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        border-top: 2px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .group-row {
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .last-in-group {
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+
 <h1>Журнал образцов</h1>
 
 <div class="card">
     <div class="card-body">
-        <table class="table table-striped table-hover">
+        <table class="table">
             <thead>
                 <tr>
                     <th>Название</th>
                     <th>Серия</th>
-                    <th>Дата создания</th>
-                    <th>Дата испытания</th>
-                    <th>Дата архивации</th>
-                    <th>Заархивировал</th>
                     <th>Срок до архивации (дней)</th>
+                    <th style="width: 100px;">Действия</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.Name</td>
-                        <td>@item.SeriesName</td>
-                        <td>@item.SampleCreationDate.ToString("d")</td>
-                        <td>@item.TestingDate.ToString("d")</td>
-                        <td>@item.ArchiveDate.ToString("d")</td>
-                        <td>@item.ArchivedBy</td>
-                        <td>
-                            @if (item.ToolingLinks.Any())
-                            {
-                                <ul class="list-unstyled mb-0">
-                                    @foreach (var link in item.ToolingLinks)
-                                    {
-                                        <li>@link.Tooling?.Name</li>
-                                    }
-                                </ul>
-                            }
-                            else
-                            {
-                                <span class="text-muted">N/A</span>
-                            }
-                        </td>
-                        <td>@item.GetAge(item.ArchiveDate)</td>
-                    </tr>
+                @{
+                    var groups = Model
+                    .OrderBy(j => j.SeriesName)
+                    .GroupBy(j => j.SeriesName);
+
+                    foreach (var group in groups)
+                    {
+                        <tr class="group-header">
+                            <td colspan="3">
+                                Серия: @(string.IsNullOrEmpty(group.Key) ? "Без серии" : group.Key)
+                            </td>
+                            <td></td>
+                        </tr>
+
+                        var lastIndex = group.Count() - 1;
+                        var index = 0;
+
+                        foreach (var item in group.OrderBy(j => j.Name))
+                        {
+                            <tr class="group-row @(index == lastIndex ? "last-in-group" : "")">
+                                <td>@item.Name</td>
+                                <td>@item.SeriesName</td>
+                                <td>@item.GetAge(item.ArchiveDate)</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info details-btn"
+                                            data-id="@item.Id">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
                 }
             </tbody>
         </table>
     </div>
 </div>
+
 <div class="d-flex justify-content-center">
     @Html.PagedListPager(
             Model,
@@ -65,3 +87,33 @@
     }
             )
 </div>
+
+<!-- Модальное окно свойств -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Свойства образца</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Контент будет загружен через AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            $('.details-btn').click(function() {
+                const id = $(this).data('id');
+                $('#detailsContent').load('@Url.Action("Details", "Journal")?id=' + id);
+                $('#detailsModal').modal('show');
+            });
+        });
+    </script>
+}

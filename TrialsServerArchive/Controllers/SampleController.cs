@@ -21,6 +21,7 @@ namespace TrialsServerArchive.Controllers
             _context = context;
             _userManager = userManager;
         }
+
         public IActionResult Index(int? page)
         {
             ViewBag.Toolings = _context.Toolings.ToList();
@@ -28,7 +29,7 @@ namespace TrialsServerArchive.Controllers
             int pageSize = 20; // Количество элементов на странице
             int pageNumber = page ?? 1; // Номер текущей страницы (по умолчанию 1)
 
-            var entries =  _context.Objects.OfType<Sample>().ToPagedList(pageNumber, pageSize);
+            var entries = _context.Objects.OfType<Sample>().ToPagedList(pageNumber, pageSize);
 
             return View(entries);
         }
@@ -126,6 +127,69 @@ namespace TrialsServerArchive.Controllers
             }
             _context.SaveChanges();
             return RedirectToAction("Index", "Trials");
+        }
+
+        [HttpPost]
+        public IActionResult RemoveFromSeries(int id)
+        {
+            var sample = _context.Objects.OfType<Sample>().FirstOrDefault(s => s.Id == id);
+            if (sample != null)
+            {
+                sample.SeriesName = null;
+                _context.SaveChanges();
+            }
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult RemoveSeries(string seriesName)
+        {
+            var samples = _context.Objects.OfType<Sample>()
+                .Where(s => s.SeriesName == seriesName);
+
+            foreach (var sample in samples)
+            {
+                sample.SeriesName = null;
+            }
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            var sample = _context.Objects.OfType<Sample>().FirstOrDefault(s => s.Id == id);
+            if (sample != null)
+            {
+                _context.Objects.Remove(sample);
+                _context.SaveChanges();
+            }
+            return Ok();
+        }
+
+        public IActionResult Details(int id)
+        {
+            var sample = _context.Objects.OfType<Sample>().FirstOrDefault(s => s.Id == id);
+            if (sample == null) return NotFound();
+            return PartialView("_SampleDetails", sample);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateSample(Sample updatedSample)
+        {
+            var existingSample = _context.Objects.OfType<Sample>()
+                .FirstOrDefault(s => s.Id == updatedSample.Id);
+
+            if (existingSample == null) return NotFound();
+
+            existingSample.Name = updatedSample.Name;
+            existingSample.SeriesName = updatedSample.SeriesName;
+            existingSample.SampleCreationDate = updatedSample.SampleCreationDate;
+            existingSample.ManufactureDate = updatedSample.ManufactureDate;
+
+            _context.SaveChanges();
+            return Ok();
         }
     }
 }

@@ -1,0 +1,57 @@
+﻿@model ObjectInJournal
+
+<div class="row">
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">ID:</dt>
+            <dd class="col-sm-8">@Model.Id</dd>
+
+            <dt class="col-sm-4">Название:</dt>
+            <dd class="col-sm-8">@Model.Name</dd>
+
+            <dt class="col-sm-4">Серия:</dt>
+            <dd class="col-sm-8">@Model.SeriesName</dd>
+
+            <dt class="col-sm-4">Дата создания:</dt>
+            <dd class="col-sm-8">@Model.SampleCreationDate.ToString("d")</dd>
+
+            <dt class="col-sm-4">Дата испытания:</dt>
+            <dd class="col-sm-8">@Model.TestingDate.ToString("d")</dd>
+        </dl>
+    </div>
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">ID образца:</dt>
+            <dd class="col-sm-8">@Model.SampleId</dd>
+
+            <dt class="col-sm-4">Дата архивации:</dt>
+            <dd class="col-sm-8">@Model.ArchiveDate.ToString("g")</dd>
+
+            <dt class="col-sm-4">Заархивировал:</dt>
+            <dd class="col-sm-8">@Model.ArchivedBy</dd>
+
+            <dt class="col-sm-4">Срок до архивации:</dt>
+            <dd class="col-sm-8">@Model.GetAge(Model.ArchiveDate) дней</dd>
+
+            <dt class="col-sm-4">Оснастка:</dt>
+            <dd class="col-sm-8">
+                @if (Model.ToolingLinks.Any())
+                {
+                    <ul>
+                        @foreach (var link in Model.ToolingLinks)
+                        {
+                            <li>@link.Tooling.Name</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <span>Не указана</span>
+                }
+            </dd>
+
+            <dt class="col-sm-4">Создал:</dt>
+            <dd class="col-sm-8">@Model.CreatedBy</dd>
+        </dl>
+    </div>
+</div>

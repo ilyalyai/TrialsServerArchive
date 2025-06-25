@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using TrialsServerArchive.Data;
-using TrialsServerArchive.Models.Objects;
-using TrialsServerArchive.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using X.PagedList;
-using X.PagedList.Extensions;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TrialsServerArchive.Data;
+using TrialsServerArchive.Models;
+using TrialsServerArchive.Models.Objects;
+using X.PagedList.Extensions;
 
 namespace TrialsServerArchive.Controllers
 {
@@ -79,6 +77,73 @@ namespace TrialsServerArchive.Controllers
             }
             _context.SaveChanges();
             return RedirectToAction("Index", "Journal");
+        }
+
+        [HttpPost]
+        public IActionResult RemoveFromSeries(int id)
+        {
+            var trial = _context.Objects.OfType<TrialObject>().FirstOrDefault(t => t.Id == id);
+            if (trial != null)
+            {
+                trial.SeriesName = null;
+                _context.SaveChanges();
+            }
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult RemoveSeries(string seriesName)
+        {
+            var trials = _context.Objects.OfType<TrialObject>()
+                .Where(t => t.SeriesName == seriesName);
+
+            foreach (var trial in trials)
+            {
+                trial.SeriesName = null;
+            }
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            var trial = _context.Objects.OfType<TrialObject>().FirstOrDefault(t => t.Id == id);
+            if (trial != null)
+            {
+                _context.Objects.Remove(trial);
+                _context.SaveChanges();
+            }
+            return Ok();
+        }
+
+        public IActionResult Details(int id)
+        {
+            var trial = _context.Objects.OfType<TrialObject>()
+                .Include(t => t.ToolingLinks)
+                .ThenInclude(tt => tt.Tooling)
+                .FirstOrDefault(t => t.Id == id);
+
+            if (trial == null) return NotFound();
+            return PartialView("_TrialDetails", trial);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateTrial(TrialObject updatedTrial)
+        {
+            var existingTrial = _context.Objects.OfType<TrialObject>()
+                .FirstOrDefault(t => t.Id == updatedTrial.Id);
+
+            if (existingTrial == null) return NotFound();
+
+            existingTrial.Name = updatedTrial.Name;
+            existingTrial.SeriesName = updatedTrial.SeriesName;
+            existingTrial.SampleCreationDate = updatedTrial.SampleCreationDate;
+            existingTrial.TestingDate = updatedTrial.TestingDate;
+
+            _context.SaveChanges();
+            return Ok();
         }
     }
 }

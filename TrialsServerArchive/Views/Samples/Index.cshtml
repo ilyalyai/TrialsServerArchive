@@ -5,6 +5,23 @@
     ViewData["Title"] = "Образцы";
 }
 
+<style>
+    .group-header {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        border-top: 2px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .group-row {
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .last-in-group {
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+
 <h1>Образцы</h1>
 
 @if (SignInManager.IsSignedIn(User))
@@ -22,9 +39,10 @@
     </div>
 }
 
+
 <div class="card">
     <div class="card-body">
-        <table class="table table-striped table-hover">
+        <table class="table">
             <thead>
                 <tr>
                     @if (SignInManager.IsSignedIn(User))
@@ -35,27 +53,65 @@
                     }
                     <th>Название</th>
                     <th>Серия</th>
-                    <th>Дата создания</th>
-                    <th>Дата производства</th>
                     <th>Срок (дней)</th>
+                    <th style="width: 150px;">Действия</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-                            <td>
-                                <input type="checkbox" class="rowCheckbox" data-id="@item.Id" />
+                @{
+                    var groups = Model
+                    .OrderBy(s => s.SeriesName)
+                    .GroupBy(s => s.SeriesName);
+
+                    foreach (var group in groups)
+                    {
+                        <tr class="group-header">
+                            <td colspan="4">
+                                Серия: @(string.IsNullOrEmpty(group.Key) ? "Без серии" : group.Key)
                             </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger ungroup-btn"
+                                        data-series="@group.Key">
+                                    <i class="bi bi-x-circle"></i> Удалить серию
+                                </button>
+                            </td>
+                        </tr>
+
+                        var lastIndex = group.Count() - 1;
+                        var index = 0;
+
+                        foreach (var item in group.OrderBy(s => s.Name))
+                        {
+                            <tr class="group-row @(index == lastIndex ? "last-in-group" : "")">
+                                @if (SignInManager.IsSignedIn(User))
+                                {
+                                    <td>
+                                        <input type="checkbox" class="rowCheckbox" data-id="@item.Id" />
+                                    </td>
+                                }
+                                <td>@item.Name</td>
+                                <td>@item.SeriesName</td>
+                                <td>@item.GetAge(DateTime.Today)</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-info details-btn"
+                                                data-id="@item.Id">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning ungroup-one-btn"
+                                                data-id="@item.Id">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger delete-btn"
+                                                data-id="@item.Id">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            index++;
                         }
-                        <td>@item.Name</td>
-                        <td>@item.SeriesName</td>
-                        <td>@item.SampleCreationDate.ToString("d")</td>
-                        <td>@item.ManufactureDate.ToString("d")</td>
-                        <td>@item.GetAge(DateTime.Today)</td>
-                    </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -162,6 +218,25 @@
             </div>
         </div>
     </div>
+
+    <!-- Модальное окно свойств -->
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Свойства образца</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailsContent">
+                    <!-- Контент будет загружен через AJAX -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="d-flex justify-content-center">
         @Html.PagedListPager(
                 Model,
@@ -211,7 +286,40 @@
                 $('#trialIds').val(ids.join(','));
                 $('#trialModal').modal('show');
             });
-        });
+        // Обработчики для кнопок действий
+             $('.ungroup-one-btn').click(function() {
+                 const id = $(this).data('id');
+                 if (confirm('Удалить образец из серии?')) {
+                     $.post('@Url.Action("RemoveFromSeries", "Samples")', { id: id }, function() {
+                         location.reload();
+                     });
+                 }
+             });
+
+             $('.ungroup-btn').click(function() {
+                 const series = $(this).data('series');
+                 if (confirm(`Удалить все образцы из серии "${series}"?`)) {
+                     $.post('@Url.Action("RemoveSeries", "Samples")', { seriesName: series }, function() {
+                         location.reload();
+                     });
+                 }
+             });
+
+             $('.delete-btn').click(function() {
+                 const id = $(this).data('id');
+                 if (confirm('Удалить образец полностью?')) {
+                     $.post('@Url.Action("Delete", "Samples")', { id: id }, function() {
+                         location.reload();
+                     });
+                 }
+             });
+
+             $('.details-btn').click(function() {
+                 const id = $(this).data('id');
+                 $('#detailsContent').load('@Url.Action("Details", "Samples")?id=' + id);
+                 $('#detailsModal').modal('show');
+             });
+         });
     </script>
     }
 }

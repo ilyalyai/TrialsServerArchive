@@ -25,5 +25,16 @@ namespace TrialsServerArchive.Controllers
 
             return View(entries);
         }
+
+        public IActionResult Details(int id)
+        {
+            var entry = _context.Objects.OfType<ObjectInJournal>()
+                .Include(j => j.ToolingLinks)
+                .ThenInclude(tt => tt.Tooling)
+                .FirstOrDefault(j => j.Id == id);
+            
+            if (entry == null) return NotFound();
+            return PartialView("_JournalDetails", entry);
+        }
     }
 }
