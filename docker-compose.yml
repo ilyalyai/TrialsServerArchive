@@ -19,7 +19,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=TrialsServerArchive;Username=login;Password=password
-    command: ["sh", "-c", "sleep 10 && dotnet TrialsServerArchive.dll"]
+    command: ["sh", "-c", "sleep 100 && dotnet TrialsServerArchive.dll"]
 
 volumes:
   postgres_data:

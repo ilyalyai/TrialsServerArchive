@@ -1,4 +1,4 @@
-﻿@model X.PagedList.IPagedList<Sample>
+﻿@model X.PagedList.IPagedList<BaseObject>
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
@@ -26,15 +26,15 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
-    <div class="mb-3">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+    <div class="d-flex justify-content-between mb-3">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSampleModal">
             <i class="bi bi-plus-circle"></i> Создать образец
         </button>
         <button class="btn btn-secondary" id="groupBtn" disabled>
             <i class="bi bi-collection"></i> Группировать
         </button>
         <button class="btn btn-success" id="moveToTrialBtn" disabled>
-            <i class="bi bi-arrow-right"></i> Перевести в испытанные
+            <i class="bi bi-arrow-right"></i> Перевести в журнал
         </button>
     </div>
 }
@@ -51,9 +51,12 @@
                             <input type="checkbox" id="selectAll" />
                         </th>
                     }
-                    <th>Название</th>
-                    <th>Серия</th>
-                    <th>Срок (дней)</th>
+                    <th scope="col">Серия</th>
+                    <th scope="col">Наименование</th>
+                    <th scope="col">Дата записи</th>
+                    <th scope="col">Дата изготовления</th>
+                    <th scope="col">№ образца</th>
+                    <th scope="col">Кем внесен</th>
                     <th style="width: 150px;">Действия</th>
                 </tr>
             </thead>
@@ -89,9 +92,12 @@
                                         <input type="checkbox" class="rowCheckbox" data-id="@item.Id" />
                                     </td>
                                 }
-                                <td>@item.Name</td>
                                 <td>@item.SeriesName</td>
-                                <td>@item.GetAge(DateTime.Today)</td>
+                                <td>@item.Name</td>
+                                <td>@item.RecordDate.ToString("dd.MM.yyyy")</td>
+                                <td>@item.SampleCreationDate.ToString("dd.MM.yyyy")</td>
+                                <td>@item.Id</td>
+                                <td>@item.CreatedBy</td>
                                 <td>
                                     <div class="btn-group">
                                         <button class="btn btn-sm btn-info details-btn"
@@ -100,7 +106,7 @@
                                         </button>
                                         <button class="btn btn-sm btn-warning ungroup-one-btn"
                                                 data-id="@item.Id">
-                                            <i class="bi bi-x"></i>
+                                            <i class="bi bi-folder-minus"></i>
                                         </button>
                                         <button class="btn btn-sm btn-danger delete-btn"
                                                 data-id="@item.Id">
@@ -118,208 +124,333 @@
     </div>
 </div>
 
-@if (SignInManager.IsSignedIn(User))
-{
-    <!-- Модальное окно создания образца -->
-    <div class="modal fade" id="createModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="CreateSample" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Создать образец</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Название образца</label>
-                            <input type="text" class="form-control" name="Name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Серия</label>
-                            <input type="text" class="form-control" name="SeriesName">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Дата создания</label>
-                            <input type="date" class="form-control" name="SampleCreationDate" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Дата производства</label>
-                            <input type="date" class="form-control" name="ManufactureDate" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <button type="submit" class="btn btn-primary">Создать</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно группировки -->
-    <div class="modal fade" id="groupModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="GroupSamples" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Группировать образцы</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="ids" id="groupIds">
-                        <div class="mb-3">
-                            <label class="form-label">Название серии</label>
-                            <input type="text" class="form-control" name="seriesName" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <button type="submit" class="btn btn-primary">Группировать</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно перевода в испытанные -->
-    <div class="modal fade" id="trialModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="MoveToTrials" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Перевод в испытанные</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="ids" id="trialIds">
-                        <div class="mb-3">
-                            <label class="form-label">Оснастка</label>
-                            <select class="form-select" name="toolingIds" multiple required size="5">
-                                @foreach (var tooling in ViewBag.Toolings)
-                                {
-                                    <option value="@tooling.Id">@tooling.Name</option>
-                                }
-                            </select>
-                            <small class="form-text text-muted">
-                                Удерживайте Ctrl для выбора нескольких элементов
-                            </small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Дата испытания</label>
-                            <input type="date" class="form-control" name="testingDate"
-                                   value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <button type="submit" class="btn btn-primary">Перевести</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно свойств -->
-    <div class="modal fade" id="detailsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+<!-- Модальное окно группировки -->
+<div class="modal fade" id="groupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="GroupSamples" method="post">
                 <div class="modal-header">
-                    <h5 class="modal-title">Свойства образца</h5>
+                    <h5 class="modal-title">Группировать образцы</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="detailsContent">
-                    <!-- Контент будет загружен через AJAX -->
+                <div class="modal-body">
+                    <input type="hidden" name="ids" id="groupIds">
+                    <div class="mb-3">
+                        <label class="form-label">Название серии</label>
+                        <input type="text" class="form-control" name="seriesName" required>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Группировать</button>
                 </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно перевода в испытанные -->
+<div class="modal fade" id="trialModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="MoveToTrials" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Перевод в испытанные</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ids" id="trialIds">
+                    <div class="mb-3">
+                        <label class="form-label">Оснастка</label>
+                        <select class="form-select" name="toolingIds" multiple required size="5">
+                            @foreach (var tooling in ViewBag.Toolings)
+                            {
+                                <option value="@tooling.Id">@tooling.Name</option>
+                            }
+                        </select>
+                        <small class="form-text text-muted">
+                            Удерживайте Ctrl для выбора нескольких элементов
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Дата испытания</label>
+                        <input type="date" class="form-control" name="testingDate"
+                                value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Перевести</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно свойств -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Свойства образца</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Контент будет загружен через AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="d-flex justify-content-center">
-        @Html.PagedListPager(
-                Model,
-                page => Url.Action("Index", new { page }),
-                new PagedListRenderOptions
-    {
-        LiElementClasses = new[] { "page-item" },
-        PageClasses = new[] { "page-link" },
-        UlElementClasses = new[] { "pagination" },
-        MaximumPageNumbersToDisplay = 5
-    }
-                )
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(
+            Model,
+            page => Url.Action("Index", new { page }),
+            new PagedListRenderOptions
+{
+    LiElementClasses = new[] { "page-item" },
+    PageClasses = new[] { "page-link" },
+    UlElementClasses = new[] { "pagination" },
+    MaximumPageNumbersToDisplay = 5
+}
+            )
+</div>
+
+<!-- Модальное окно создания образца -->
+<div class="modal fade" id="createSampleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новый образец</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createSampleForm" method="post" asp-action="CreateSample">
+                <div class="modal-body">
+                    <div id="formErrors" class="alert alert-danger d-none"></div>
+                        
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Наименование *</label>
+                                <input name="Name" class="form-control" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Имя серии *</label>
+                                <input name="SeriesName" class="form-control" required />
+                            </div>
+                                
+                            <div class="mb-3">
+                                <label class="form-label">Тип образца *</label>
+                                <select name="SampleTypeId" class="form-select" required>
+                                    <option value="">Выберите тип</option>
+                                    @foreach (var type in ViewBag.SampleTypes)
+                                    {
+                                        <option value="@type.Id">@type.Name</option>
+                                    }
+                                </select>
+                            </div>
+                                
+                            <div class="mb-3">
+                                <label class="form-label">Дата изготовления *</label>
+                                <input name="SampleCreationDate" type="date" class="form-control" required />
+                            </div>
+                                
+                            <div class="mb-3">
+                                <label class="form-label">Вес (кг) *</label>
+                                <input name="Weight" type="number" step="0.001" class="form-control" required />
+                            </div>
+                        </div>
+                            
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Размеры (мм) *</label>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <input name="DimensionA" class="form-control" placeholder="a (h)" required />
+                                    </div>
+                                    <div class="col-4">
+                                        <input name="DimensionB" class="form-control" placeholder="b (d)" required />
+                                    </div>
+                                    <div class="col-4">
+                                        <input name="DimensionC" class="form-control" placeholder="c" id="dimensionCInput" />
+                                    </div>
+                                </div>
+                            </div>
+                                
+                            <div class="mb-3">
+                                <label class="form-label">Тип журнала *</label>
+                                <select name="JournalType" class="form-select" required>
+                                    <option value="RES">РЕС</option>
+                                    <option value="OB">ОБ</option>
+                                </select>
+                            </div>
+                                
+                            <div class="mb-3">
+                                <label class="form-label">Примечание</label>
+                                <textarea name="Comment" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 
-    @section Scripts {
-    <script>
-        $(function () {
-            // Выбор/снятие всех чекбоксов
-            $('#selectAll').change(function () {
-                $('.rowCheckbox').prop('checked', this.checked);
-                updateButtons();
+@section Scripts {
+<script>
+    $(function () {
+        // Открытие модалки группировки
+        $('#createFormBtn').click(function () {
+            $(this).find('.modal-content').load('@Url.Action("CreateForm", "Sample")');
+        });
+
+        // Выбор/снятие всех чекбоксов
+        $('#selectAll').change(function () {
+            $('.rowCheckbox').prop('checked', this.checked);
+            updateButtons();
+        });
+
+        // Обновление состояния кнопок при изменении выбора
+        $('.rowCheckbox').change(updateButtons);
+
+        function updateButtons() {
+            const checkedCount = $('.rowCheckbox:checked').length;
+            $('#groupBtn').prop('disabled', checkedCount === 0);
+            $('#moveToTrialBtn').prop('disabled', checkedCount === 0);
+        }
+
+        // Открытие модалки группировки
+        $('#groupBtn').click(function () {
+            const ids = $('.rowCheckbox:checked').map(function () {
+                return $(this).data('id');
+            }).get();
+            $('#groupIds').val(ids.join(','));
+            $('#groupModal').modal('show');
+        });
+
+        // Открытие модалки перевода в испытанные
+        $('#moveToTrialBtn').click(function () {
+            const ids = $('.rowCheckbox:checked').map(function () {
+                return $(this).data('id');
+            }).get();
+            $('#trialIds').val(ids.join(','));
+            $('#trialModal').modal('show');
+        });
+    // Обработчики для кнопок действий
+            $('.ungroup-one-btn').click(function() {
+                const id = $(this).data('id');
+                if (confirm('Удалить образец из серии?')) {
+                    $.post('@Url.Action("RemoveFromSeries", "Samples")', { id: id }, function() {
+                        location.reload();
+                    });
+                }
             });
 
-            // Обновление состояния кнопок при изменении выбора
-            $('.rowCheckbox').change(updateButtons);
+            $('.ungroup-btn').click(function() {
+                const series = $(this).data('series');
+                if (confirm(`Удалить все образцы из серии "${series}"?`)) {
+                    $.post('@Url.Action("RemoveSeries", "Samples")', { seriesName: series }, function() {
+                        location.reload();
+                    });
+                }
+            });
 
-            function updateButtons() {
-                const checkedCount = $('.rowCheckbox:checked').length;
-                $('#groupBtn').prop('disabled', checkedCount === 0);
-                $('#moveToTrialBtn').prop('disabled', checkedCount === 0);
+            $('.delete-btn').click(function() {
+                const id = $(this).data('id');
+                if (confirm('Удалить образец полностью?')) {
+                    $.post('@Url.Action("Delete", "Samples")', { id: id }, function() {
+                        location.reload();
+                    });
+                }
+            });
+
+            $('.details-btn').click(function() {
+                const id = $(this).data('id');
+                $('#detailsContent').load('@Url.Action("Details", "Samples")?id=' + id);
+                $('#detailsModal').modal('show');
+            });
+        });
+
+    $(document).ready(function() {
+        // Динамическое управление полями размеров
+        $('select[name="SampleTypeId"]').change(function() {
+            const type = $(this).find('option:selected').text();
+            if (type === 'Ц') {
+                $('#dimensionCInput').prop('disabled', true).val('');
+            } else {
+                $('#dimensionCInput').prop('disabled', false);
             }
+        });
 
-            // Открытие модалки группировки
-            $('#groupBtn').click(function () {
-                const ids = $('.rowCheckbox:checked').map(function () {
-                    return $(this).data('id');
-                }).get();
-                $('#groupIds').val(ids.join(','));
-                $('#groupModal').modal('show');
+        // Обработка отправки формы
+        $('#createSampleForm').submit(function(e) {
+            e.preventDefault();
+                
+            // Показать индикатор загрузки
+            const submitBtn = $(this).find('button[type="submit"]');
+            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status"></span> Сохранение...');
+            submitBtn.prop('disabled', true);
+                
+            // Скрыть предыдущие ошибки
+            $('#formErrors').addClass('d-none');
+                
+            // Отправка формы
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    // Успешное создание - закрыть модальное окно и обновить страницу
+                    $('#createSampleModal').modal('hide');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    // Обработка ошибок валидации
+                    if (xhr.status === 400 && xhr.responseJSON) {
+                        let errorHtml = '<ul>';
+                        if (xhr.responseJSON.errors) {
+                            // Ошибки валидации модели
+                            for (const key in xhr.responseJSON.errors) {
+                                if (xhr.responseJSON.errors.hasOwnProperty(key)) {
+                                    xhr.responseJSON.errors[key].forEach(error => {
+                                        errorHtml += `<li>${error}</li>`;
+                                    });
+                                }
+                            }
+                        } else {
+                            // Общая ошибка
+                            errorHtml += `<li>${xhr.responseJSON.message || 'Ошибка при создании образца'}</li>`;
+                        }
+                        errorHtml += '</ul>';
+                            
+                        $('#formErrors').html(errorHtml).removeClass('d-none');
+                    } else {
+                        // Непредвиденная ошибка
+                        $('#formErrors').html('<li>Произошла непредвиденная ошибка</li>').removeClass('d-none');
+                    }
+                },
+                complete: function() {
+                    submitBtn.html('Сохранить');
+                    submitBtn.prop('disabled', false);
+                }
             });
-
-            // Открытие модалки перевода в испытанные
-            $('#moveToTrialBtn').click(function () {
-                const ids = $('.rowCheckbox:checked').map(function () {
-                    return $(this).data('id');
-                }).get();
-                $('#trialIds').val(ids.join(','));
-                $('#trialModal').modal('show');
-            });
-        // Обработчики для кнопок действий
-             $('.ungroup-one-btn').click(function() {
-                 const id = $(this).data('id');
-                 if (confirm('Удалить образец из серии?')) {
-                     $.post('@Url.Action("RemoveFromSeries", "Samples")', { id: id }, function() {
-                         location.reload();
-                     });
-                 }
-             });
-
-             $('.ungroup-btn').click(function() {
-                 const series = $(this).data('series');
-                 if (confirm(`Удалить все образцы из серии "${series}"?`)) {
-                     $.post('@Url.Action("RemoveSeries", "Samples")', { seriesName: series }, function() {
-                         location.reload();
-                     });
-                 }
-             });
-
-             $('.delete-btn').click(function() {
-                 const id = $(this).data('id');
-                 if (confirm('Удалить образец полностью?')) {
-                     $.post('@Url.Action("Delete", "Samples")', { id: id }, function() {
-                         location.reload();
-                     });
-                 }
-             });
-
-             $('.details-btn').click(function() {
-                 const id = $(this).data('id');
-                 $('#detailsContent').load('@Url.Action("Details", "Samples")?id=' + id);
-                 $('#detailsModal').modal('show');
-             });
-         });
-    </script>
-    }
+        });
+            
+        // Сброс формы при закрытии модального окна
+        $('#createSampleModal').on('hidden.bs.modal', function() {
+            $(this).find('form')[0].reset();
+            $('#formErrors').addClass('d-none');
+            $('#dimensionCInput').prop('disabled', false);
+        });
+    });
+</script>
 }

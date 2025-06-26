@@ -1,0 +1,131 @@
+﻿@model TrialsServerArchive.Models.Objects.SampleType
+
+<form id="editTypeForm" method="post" asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+    @Html.AntiForgeryToken()
+    
+    <div class="modal-body">
+        <div id="editTypeErrors" class="alert alert-danger d-none"></div>
+        
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label">Название типа *</label>
+            <input asp-for="Name" class="form-control" id="editTypeName" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Форма образца</label>
+            <select class="form-select" id="editShapeType">
+                <option value="">Выберите форму</option>
+                <option value="Куб">Куб</option>
+                <option value="Призма">Призма</option>
+                <option value="Цилиндр">Цилиндр</option>
+            </select>
+            <div class="form-text" id="editAutoShapeInfo"></div>
+        </div>
+        
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Описание</label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </div>
+</form>
+
+<script>
+    $(function() {
+        // Функция автоопределения формы по первой букве названия
+        function autoDetectShape(name) {
+            if (!name) return '';
+            
+            const firstChar = name.charAt(0).toUpperCase();
+            switch (firstChar) {
+                case 'К': return 'Куб';
+                case 'П': return 'Призма';
+                case 'Ц': return 'Цилиндр';
+                default: return '';
+            }
+        }
+        
+        // Автоопределение формы при вводе названия
+        $('#editTypeName').on('input', function() {
+            const name = $(this).val().trim();
+            const detectedShape = autoDetectShape(name);
+            
+            if (detectedShape) {
+                // Если поле формы не выбрано - устанавливаем автоопределение
+                if (!$('#editShapeType').val()) {
+                    $('#editShapeType').val(detectedShape);
+                    $('#editAutoShapeInfo').text(`Автоопределена форма: ${detectedShape}`);
+                }
+            } else {
+                $('#editAutoShapeInfo').text('');
+            }
+        });
+        
+        // Сброс автоопределения при ручном выборе формы
+        $('#editShapeType').change(function() {
+            $('#editAutoShapeInfo').text('');
+        });
+        
+        // Инициализация формы
+        const detectedShape = autoDetectShape($('#editTypeName').val());
+        if (detectedShape) {
+            $('#editAutoShapeInfo').text(`Автоопределена форма: ${detectedShape}`);
+        }
+        
+        // Обработка формы редактирования
+        $('#editTypeForm').submit(function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const submitBtn = form.find('button[type="submit"]');
+            
+            submitBtn.html('<span class="spinner-border spinner-border-sm"></span> Сохранение...');
+            submitBtn.prop('disabled', true);
+            $('#editTypeErrors').addClass('d-none').empty();
+            
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $('#editTypeModal').modal('hide');
+                        location.reload();
+                    } else {
+                        showFormErrors('#editTypeErrors', response);
+                    }
+                },
+                error: function() {
+                    $('#editTypeErrors').html(
+                        '<li>Ошибка при сохранении изменений</li>'
+                    ).removeClass('d-none');
+                },
+                complete: function() {
+                    submitBtn.html('Сохранить');
+                    submitBtn.prop('disabled', false);
+                }
+            });
+        });
+        
+        // Функция для отображения ошибок формы
+        function showFormErrors(container, response) {
+            let errorHtml = '<ul>';
+            
+            if (response.errors && response.errors.length > 0) {
+                response.errors.forEach(error => {
+                    errorHtml += `<li>${error}</li>`;
+                });
+            } else if (response.message) {
+                errorHtml += `<li>${response.message}</li>`;
+            } else {
+                errorHtml += '<li>Произошла ошибка при обработке запроса</li>';
+            }
+            
+            errorHtml += '</ul>';
+            $(container).html(errorHtml).removeClass('d-none');
+        }
+    });
+</script>
