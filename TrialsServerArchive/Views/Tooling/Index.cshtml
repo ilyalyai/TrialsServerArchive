@@ -1,8 +1,11 @@
 ﻿@model X.PagedList.IPagedList<Tooling>
 @inject SignInManager<ApplicationUser> SignInManager
+@using TrialsServerArchive.Models.Objects
 
 @{
     ViewData["Title"] = "Управление оснасткой";
+    var currentUser = await SignInManager.UserManager.GetUserAsync(User);
+    var currentUserName = currentUser?.FullName ?? "System";
 }
 
 <h1>Оснастка</h1>
@@ -24,17 +27,36 @@
                     <th>Название</th>
                     <th>Описание</th>
                     <th>Дата сверки</th>
+                    <th>Дата окончания сверки</th>
+                    <th>Кто сверил</th>
                     <th>Создал</th>
+                    <th style="width: 120px;">Действия</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr class="@(item.ExpiryDate < DateTime.Now ? "table-danger" : "")">
                         <td>@item.Name</td>
                         <td>@item.Description</td>
                         <td>@item.ReconciliationDate.ToString("d")</td>
+                        <td>@item.ExpiryDate.ToString("d")</td>
+                        <td>@item.VerifiedBy</td>
                         <td>@item.CreatedBy</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-info edit-btn"
+                                        data-id="@item.Id"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editModal">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-danger delete-btn"
+                                        data-id="@item.Id">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -61,19 +83,42 @@
     <div class="modal fade" id="createModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form asp-action="Create" method="post">
+                <form id="createToolingForm" method="post" asp-action="Create">
                     <div class="modal-header">
                         <h5 class="modal-title">Добавить оснастку</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <div id="createErrors" class="alert alert-danger d-none"></div>
+
                         <div class="mb-3">
-                            <label class="form-label">Название</label>
+                            <label class="form-label">Название *</label>
                             <input type="text" class="form-control" name="Name" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Описание</label>
                             <textarea class="form-control" name="Description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата сверки *</label>
+                            <input type="date" class="form-control" name="ReconciliationDate"
+                                   value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата окончания сверки *</label>
+                            <input type="date" class="form-control" name="ExpiryDate"
+                                   value="@DateTime.Now.AddYears(1).ToString("yyyy-MM-dd")" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Кто сверил *</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="VerifiedBy"
+                                       id="verifiedByInput" required>
+                                <button class="btn btn-outline-secondary" type="button"
+                                        id="verifiedByMeBtn">
+                                    Я
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -84,4 +129,113 @@
             </div>
         </div>
     </div>
+
+    <!-- Модальное окно редактирования оснастки -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать оснастку</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div id="editToolingContent">
+                    <!-- Контент будет загружен через AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Исправление кодировки для кнопки "Я"
+            const currentUserName = @Json.Serialize(currentUser?.FullName ?? "System");
+
+            $('#verifiedByMeBtn').click(function () {
+                $('#verifiedByInput').val(currentUserName);
+            });
+
+            // Обработка отправки формы создания
+            $('#createToolingForm').submit(function (e) {
+                e.preventDefault();
+                const form = $(this);
+                const submitBtn = form.find('button[type="submit"]');
+
+                submitBtn.html('<span class="spinner-border spinner-border-sm"></span> Сохранение...');
+                submitBtn.prop('disabled', true);
+                $('#createErrors').addClass('d-none').empty();
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            $('#createModal').modal('hide');
+                            location.reload();
+                        } else {
+                            showErrors('#createErrors', response);
+                        }
+                    },
+                    error: function (xhr) {
+                        showErrors('#createErrors', xhr.responseJSON || {
+                            message: 'Ошибка при создании оснастки'
+                        });
+                    },
+                    complete: function () {
+                        submitBtn.html('Сохранить');
+                        submitBtn.prop('disabled', false);
+                    }
+                });
+            });
+
+            // Загрузка формы редактирования
+            $('.edit-btn').click(function () {
+                const toolingId = $(this).data('id');
+                $('#editToolingContent').load('@Url.Action("Edit", "Tooling")/' + toolingId);
+            });
+
+            // Обработка удаления
+            $('.delete-btn').click(function () {
+                const toolingId = $(this).data('id');
+                if (confirm('Вы уверены, что хотите удалить эту оснастку?')) {
+                    $.post('@Url.Action("Delete", "Tooling")/' + toolingId, function (response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.message || 'Ошибка при удалении');
+                        }
+                    }).fail(function () {
+                        alert('Произошла ошибка при удалении');
+                    });
+                }
+            });
+
+            // Функция для отображения ошибок
+            function showErrors(container, response) {
+                let errorHtml = '<ul>';
+
+                if (response.errors) {
+                    response.errors.forEach(error => {
+                        errorHtml += `<li>${error}</li>`;
+                    });
+                } else if (response.message) {
+                    errorHtml += `<li>${response.message}</li>`;
+                } else {
+                    errorHtml += '<li>Произошла неизвестная ошибка</li>';
+                }
+
+                errorHtml += '</ul>';
+                $(container).html(errorHtml).removeClass('d-none');
+            }
+        });
+    </script>
+
+    <style>
+        .table-danger td {
+            background-color: #ffcccc !important;
+            font-weight: bold;
+        }
+    </style>
 }

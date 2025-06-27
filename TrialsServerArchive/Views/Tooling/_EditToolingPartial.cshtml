@@ -1,0 +1,80 @@
+﻿@model Tooling
+
+<form id="editToolingForm" method="post" asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="modal-body">
+        <div id="editErrors" class="alert alert-danger d-none"></div>
+
+        <div class="mb-3">
+            <label class="form-label">Название *</label>
+            <input asp-for="Name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Описание</label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Дата сверки *</label>
+            <input asp-for="ReconciliationDate" type="date" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Дата окончания сверки *</label>
+            <input asp-for="ExpiryDate" type="date" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Кто сверил *</label>
+            <input asp-for="VerifiedBy" class="form-control" required>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </div>
+</form>
+
+<script>
+    $(function() {
+        // Обработка формы редактирования
+        $('#editToolingForm').submit(function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const submitBtn = form.find('button[type="submit"]');
+
+            submitBtn.html('<span class="spinner-border spinner-border-sm"></span> Сохранение...');
+            submitBtn.prop('disabled', true);
+            $('#editErrors').addClass('d-none').empty();
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $('#editModal').modal('hide');
+                        location.reload();
+                    } else {
+                        let errorHtml = '<ul>';
+                        if (response.message) errorHtml += `<li>${response.message}</li>`;
+                        errorHtml += '</ul>';
+                        $('#editErrors').html(errorHtml).removeClass('d-none');
+                    }
+                },
+                error: function(xhr) {
+                    let errorHtml = '<ul>';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorHtml += `<li>${xhr.responseJSON.message}</li>`;
+                    } else {
+                        errorHtml += '<li>Ошибка при сохранении</li>';
+                    }
+                    errorHtml += '</ul>';
+                    $('#editErrors').html(errorHtml).removeClass('d-none');
+                },
+                complete: function() {
+                    submitBtn.html('Сохранить');
+                    submitBtn.prop('disabled', false);
+                }
+            });
+        });
+    });
+</script>

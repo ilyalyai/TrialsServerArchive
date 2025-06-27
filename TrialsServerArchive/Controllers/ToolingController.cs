@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TrialsServerArchive.Data;
 using TrialsServerArchive.Models;
 using TrialsServerArchive.Models.Objects;
+using X.PagedList;
 using X.PagedList.Extensions;
 
 namespace TrialsServerArchive.Controllers
@@ -13,67 +15,153 @@ namespace TrialsServerArchive.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<ToolingController> _logger;
 
-        public ToolingController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ToolingController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            ILogger<ToolingController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
         public IActionResult Index(int? page)
         {
-            int pageSize = 20; // Количество элементов на странице
-            int pageNumber = page ?? 1; // Номер текущей страницы (по умолчанию 1)
-
+            int pageSize = 20;
+            int pageNumber = page ?? 1;
             var entries = _context.Toolings.ToPagedList(pageNumber, pageSize);
-
             return View(entries);
         }
 
         [HttpPost]
-        public IActionResult Create(Tooling tooling)
+        public async Task<IActionResult> Create(Tooling tooling)
         {
             try
             {
-                // Устанавливаем значения перед валидацией
-                // Получение текущего пользователя
-                var user = Task.Run(async () => await _userManager.GetUserAsync(User)).Result;
-                if (user != null && !string.IsNullOrEmpty(user.FullName))
-                    tooling.CreatedBy = user.GetInitials(); // Используем метод расширения
-                else
-                    tooling.CreatedBy = "System"; // Резервное значение
-                tooling.ReconciliationDate = DateTime.UtcNow;
+                var user = await _userManager.GetUserAsync(User);
+                tooling.CreatedBy = user?.GetInitials() ?? "System";
 
-                // Удаляем ошибки валидации для этих полей
                 ModelState.Remove(nameof(Tooling.CreatedBy));
-                ModelState.Remove(nameof(Tooling.ReconciliationDate));
+                ModelState.Remove(nameof(Tooling.Id));
 
                 if (ModelState.IsValid)
                 {
                     _context.Toolings.Add(tooling);
-                    _context.SaveChanges();
-                    return RedirectToAction(nameof(Index));
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true });
                 }
 
-                // Логирование ошибок валидации
-                foreach (var entry in ModelState)
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return Json(new
                 {
-                    if (entry.Value.Errors.Count > 0)
-                    {
-                        Console.WriteLine($"Ошибка в поле '{entry.Key}':");
-                        foreach (var error in entry.Value.Errors)
-                        {
-                            Console.WriteLine($"- {error.ErrorMessage}");
-                        }
-                    }
-                }
-
-                return RedirectToAction(nameof(Index));
+                    success = false,
+                    message = "Ошибки валидации",
+                    errors
+                });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка сохранения: {ex.Message}");
-                return RedirectToAction(nameof(Index));
+                _logger.LogError(ex, "Ошибка при создании оснастки");
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message,
+                    errors = new List<string> { ex.Message }
+                });
+            }
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            var tooling = await _context.Toolings.FindAsync(id);
+            if (tooling == null)
+            {
+                return Content("<div class='alert alert-danger'>Оснастка не найдена</div>");
+            }
+
+            return PartialView("_EditToolingPartial", tooling);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, Tooling tooling)
+        {
+            try
+            {
+                if (id != tooling.Id)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Несоответствие идентификаторов"
+                    });
+                }
+
+                var existingTooling = await _context.Toolings.FindAsync(id);
+                if (existingTooling == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Оснастка не найдена"
+                    });
+                }
+
+                // Обновляем только разрешенные поля
+                existingTooling.Name = tooling.Name;
+                existingTooling.Description = tooling.Description;
+                existingTooling.ReconciliationDate = tooling.ReconciliationDate;
+                existingTooling.ExpiryDate = tooling.ExpiryDate;
+                existingTooling.VerifiedBy = tooling.VerifiedBy;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при редактировании оснастки");
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var tooling = await _context.Toolings.FindAsync(id);
+                if (tooling == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Оснастка не найдена"
+                    });
+                }
+
+                _context.Toolings.Remove(tooling);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при удалении оснастки");
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
             }
         }
     }

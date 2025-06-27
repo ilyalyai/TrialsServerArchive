@@ -52,7 +52,7 @@ namespace TrialsServerArchive.Controllers
 
                     _context.Objects.Add(sample);
                     _context.SaveChanges();
-                    return Ok();
+                    return Ok(new { Result = true});
                 }
                 // Сбор ошибок валидации
                 var errors = ModelState.Values

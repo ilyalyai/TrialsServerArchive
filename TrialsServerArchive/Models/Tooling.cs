@@ -16,7 +16,10 @@ namespace TrialsServerArchive.Models
 
         public string CreatedBy { get; set; }
 
+        public string VerifiedBy { get; set; } = string.Empty;
+
         public DateTime ReconciliationDate { get; set; }
+        public DateTime ExpiryDate { get; set; }
         // Изменяем тип навигационного свойства
         public ICollection<TrialTooling> TrialLinks { get; set; } = [];
 

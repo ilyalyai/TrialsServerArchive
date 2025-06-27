@@ -277,7 +277,6 @@ namespace TrialsServerArchive.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("SeriesName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("Weight")
@@ -363,12 +362,19 @@ namespace TrialsServerArchive.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ReconciliationDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("VerifiedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
