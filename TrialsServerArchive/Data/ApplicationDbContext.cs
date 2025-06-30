@@ -15,6 +15,12 @@ namespace TrialsServerArchive.Data
         public DbSet<SamplePhoto> SamplePhotos { get; set; }
         
         public DbSet<Tooling> Toolings { get; set; }
+
+        public DbSet<FurnaceProgram> FurnacePrograms { get; set; }
+
+        public DbSet<StoragePlace> StoragePlaces { get; set; }
+        
+
         public DbSet<TrialTooling> TrialToolings { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -44,7 +50,7 @@ namespace TrialsServerArchive.Data
             // Настройка TPH для иерархии объектов
             modelBuilder.Entity<BaseObject>()
                 .HasDiscriminator<string>("ObjectType")
-                .HasValue<BaseObject>("Sample")
+                .HasValue<Sample>("Sample")
                 .HasValue<TrialObject>("TrialObject")
                 .HasValue<ObjectInJournal>("ObjectInJournal");
 

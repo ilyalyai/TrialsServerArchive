@@ -9,7 +9,7 @@
     public class SampleType
     {
         public int Id { get; set; }
-        public required string Name { get; set; } // "К200", "К150" и т.д.
+        public string Name { get; set; } // "К200", "К150" и т.д.
 
         public string? Description { get; set; } 
     }
@@ -100,6 +100,11 @@
         /// Возраст образца в сутках
         /// </summary>
         public int Age => GetAge(RecordDate);
+
+        /// <summary>
+        /// Плотность образца. Считается автоматически
+        /// </summary>
+        public double Density { get; set; }
 
         /// <summary>
         /// Сколько времени прошло с даты создания 

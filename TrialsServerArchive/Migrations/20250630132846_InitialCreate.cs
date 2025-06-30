@@ -53,6 +53,20 @@ namespace TrialsServerArchive.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "FurnacePrograms",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FurnacePrograms", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SampleTypes",
                 columns: table => new
                 {
@@ -64,6 +78,20 @@ namespace TrialsServerArchive.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SampleTypes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StoragePlaces",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StoragePlaces", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -208,9 +236,26 @@ namespace TrialsServerArchive.Migrations
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     JournalType = table.Column<int>(type: "int", nullable: false),
                     SampleTypeId = table.Column<int>(type: "int", nullable: false),
+                    Density = table.Column<double>(type: "float", nullable: false),
                     ObjectType = table.Column<string>(type: "nvarchar(21)", maxLength: 21, nullable: false),
                     SampleId = table.Column<int>(type: "int", nullable: true),
                     TestingDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TestMode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    WeightAfterTest = table.Column<double>(type: "float", nullable: true),
+                    DimensionAAfterTest = table.Column<double>(type: "float", nullable: true),
+                    DimensionBAfterTest = table.Column<double>(type: "float", nullable: true),
+                    DimensionCAfterTest = table.Column<double>(type: "float", nullable: true),
+                    DensityAfterTest = table.Column<double>(type: "float", nullable: true),
+                    BreakingLoad = table.Column<double>(type: "float", nullable: true),
+                    WetCoefficient = table.Column<double>(type: "float", nullable: true),
+                    TestingTemperature = table.Column<double>(type: "float", nullable: true),
+                    TestingHumidity = table.Column<double>(type: "float", nullable: true),
+                    MU = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MUStar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PP = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FurnaceProgramId = table.Column<int>(type: "int", nullable: true),
+                    StoragePlaceId = table.Column<int>(type: "int", nullable: true),
+                    TestedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ArchiveDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ArchivedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -218,11 +263,21 @@ namespace TrialsServerArchive.Migrations
                 {
                     table.PrimaryKey("PK_Objects", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_Objects_FurnacePrograms_FurnaceProgramId",
+                        column: x => x.FurnaceProgramId,
+                        principalTable: "FurnacePrograms",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_Objects_SampleTypes_SampleTypeId",
                         column: x => x.SampleTypeId,
                         principalTable: "SampleTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Objects_StoragePlaces_StoragePlaceId",
+                        column: x => x.StoragePlaceId,
+                        principalTable: "StoragePlaces",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -312,9 +367,19 @@ namespace TrialsServerArchive.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Objects_FurnaceProgramId",
+                table: "Objects",
+                column: "FurnaceProgramId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Objects_SampleTypeId",
                 table: "Objects",
                 column: "SampleTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Objects_StoragePlaceId",
+                table: "Objects",
+                column: "StoragePlaceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SamplePhotos_SampleId",
@@ -364,7 +429,13 @@ namespace TrialsServerArchive.Migrations
                 name: "Toolings");
 
             migrationBuilder.DropTable(
+                name: "FurnacePrograms");
+
+            migrationBuilder.DropTable(
                 name: "SampleTypes");
+
+            migrationBuilder.DropTable(
+                name: "StoragePlaces");
         }
     }
 }

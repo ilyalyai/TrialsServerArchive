@@ -1,0 +1,299 @@
+﻿<!-- Views/Options/Index.cshtml -->
+@model TrialsServerArchive.Models.Objects.OptionsIndexViewModel
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    <ul class="nav nav-tabs mb-4" id="optionsTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="sample-types-tab" data-bs-toggle="tab" data-bs-target="#sample-types" type="button" role="tab">
+                Типы образцов
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="furnace-tab" data-bs-toggle="tab" data-bs-target="#furnace-programs" type="button" role="tab">
+                Программы печей
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="storage-tab" data-bs-toggle="tab" data-bs-target="#storage-places" type="button" role="tab">
+                Места хранения
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="optionsTabContent">
+        <!-- Sample Types -->
+        <div class="tab-pane fade show active" id="sample-types" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Типы образцов</h3>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSampleTypeModal">
+                    <i class="bi bi-plus-circle"></i> Добавить
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Описание</th>
+                            <th style="width: 120px;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.SampleTypes)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.Name</td>
+                                <td>@(item.Description ?? "-")</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary edit-sample-type" 
+                                                data-id="@item.Id"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editSampleTypeModal">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger delete-sample-type" 
+                                                data-id="@item.Id">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Furnace Programs -->
+        <div class="tab-pane fade" id="furnace-programs" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Программы печей</h3>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createFurnaceModal">
+                    <i class="bi bi-plus-circle"></i> Добавить
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Описание</th>
+                            <th style="width: 120px;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.FurnacePrograms)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.Name</td>
+                                <td>@(item.Description ?? "-")</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary edit-furnace" 
+                                                data-id="@item.Id"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editFurnaceModal">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger delete-furnace" 
+                                                data-id="@item.Id">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Storage Places -->
+        <div class="tab-pane fade" id="storage-places" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Места хранения</h3>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createStorageModal">
+                    <i class="bi bi-plus-circle"></i> Добавить
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Описание</th>
+                            <th style="width: 120px;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.StoragePlaces)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.Name</td>
+                                <td>@(item.Description ?? "-")</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary edit-storage" 
+                                                data-id="@item.Id"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editStorageModal">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger delete-storage" 
+                                                data-id="@item.Id">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals for Create -->
+@await Html.PartialAsync("_CreateSampleTypeModal", new SampleType())
+@await Html.PartialAsync("_CreateFurnaceModal", new FurnaceProgram())
+@await Html.PartialAsync("_CreateStorageModal", new StoragePlace())
+
+<!-- Modals for Edit -->
+<div class="modal fade" id="editSampleTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" id="editSampleTypeContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="editFurnaceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" id="editFurnaceContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="editStorageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" id="editStorageContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            // Sample Type handlers
+            $('.edit-sample-type').click(function() {
+                const id = $(this).data('id');
+                $('#editSampleTypeContent').load('@Url.Action("EditSampleTypeModal", "Options")/' + id);
+            });
+            
+            $('.delete-sample-type').click(function() {
+                const id = $(this).data('id');
+                if (confirm('Удалить этот тип образца?')) {
+                    $.post('@Url.Action("DeleteSampleType", "Options")/' + id, function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.error || 'Ошибка при удалении');
+                        }
+                    }).fail(function() {
+                        alert('Ошибка сервера');
+                    });
+                }
+            });
+
+            // Furnace handlers
+            $('.edit-furnace').click(function() {
+                const id = $(this).data('id');
+                $('#editFurnaceContent').load('@Url.Action("EditFurnaceModal", "Options")/' + id);
+            });
+            
+            $('.delete-furnace').click(function() {
+                const id = $(this).data('id');
+                if (confirm('Удалить эту программу печи?')) {
+                    $.post('@Url.Action("DeleteFurnace", "Options")/' + id, function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.error || 'Ошибка при удалении');
+                        }
+                    }).fail(function() {
+                        alert('Ошибка сервера');
+                    });
+                }
+            });
+
+            // Storage handlers
+            $('.edit-storage').click(function() {
+                const id = $(this).data('id');
+                $('#editStorageContent').load('@Url.Action("EditStorageModal", "Options")/' + id);
+            });
+            
+            $('.delete-storage').click(function() {
+                const id = $(this).data('id');
+                if (confirm('Удалить это место хранения?')) {
+                    $.post('@Url.Action("DeleteStorage", "Options")/' + id, function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.error || 'Ошибка при удалении');
+                        }
+                    }).fail(function() {
+                        alert('Ошибка сервера');
+                    });
+                }
+            });
+
+            // Обновленная обработка AJAX форм
+            $(document).on('submit', 'form[data-ajax="true"]', function (e) {
+                e.preventDefault();
+                const form = $(this);
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            // Закрываем модальное окно
+                            form.closest('.modal').modal('hide');
+                            // Перезагружаем страницу для обновления данных
+                            location.reload();
+                        } else {
+                            // Обработка ошибок валидации
+                            if (response.errors) {
+                                let errorHtml = '<div class="alert alert-danger">';
+                                response.errors.forEach(error => {
+                                    errorHtml += `<div>${error}</div>`;
+                                });
+                                errorHtml += '</div>';
+                                form.find('.modal-body').prepend(errorHtml);
+                            } else {
+                                alert(response.error || 'Ошибка при сохранении');
+                            }
+                        }
+                    },
+                    error: function () {
+                        alert('Ошибка сервера');
+                    }
+                });
+            });
+
+            // Очистка ошибок при открытии модальных окон
+            $('.modal').on('show.bs.modal', function () {
+                $(this).find('.alert-danger').remove();
+            });
+        });
+    </script>
+}

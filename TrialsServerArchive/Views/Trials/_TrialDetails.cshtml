@@ -1,99 +1,190 @@
-﻿@inject SignInManager<ApplicationUser> SignInManager
-@model TrialObject
+﻿@model TrialsServerArchive.Models.Objects.TrialObject
 
-<div class="row">
-    <div class="col-md-6">
-        <dl class="row">
-            <dt class="col-sm-4">ID:</dt>
-            <dd class="col-sm-8">@Model.Id</dd>
+@{
+    ViewData["Title"] = "Редактирование результатов испытаний";
+    var furnacePrograms = ViewBag.FurnacePrograms as IEnumerable<FurnaceProgram> ?? new List<FurnaceProgram>();
+    var storagePlaces = ViewBag.StoragePlaces as IEnumerable<StoragePlace> ?? new List<StoragePlace>();
+}
 
-            <dt class="col-sm-4">Название:</dt>
-            <dd class="col-sm-8">@Model.Name</dd>
+<div class="container">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
 
-            <dt class="col-sm-4">Серия:</dt>
-            <dd class="col-sm-8">@Model.SeriesName</dd>
+    <form asp-action="SaveTrialDetails" method="post">
+        <input type="hidden" asp-for="Id" />
 
-            <dt class="col-sm-4">Дата создания:</dt>
-            <dd class="col-sm-8">@Model.SampleCreationDate.ToString("d")</dd>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Общие параметры</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Образец</label>
+                            <input class="form-control" value="@Model.Name" readonly>
+                        </div>
 
-            <dt class="col-sm-4">Дата испытания:</dt>
-            <dd class="col-sm-8">@Model.TestingDate.ToString("d")</dd>
-        </dl>
-    </div>
-    <div class="col-md-6">
-        <dl class="row">
-            <dt class="col-sm-4">ID образца:</dt>
-            <dd class="col-sm-8">@Model.SampleId</dd>
+                        <div class="mb-3">
+                            <label asp-for="TestingDate" class="form-label">Дата испытаний *</label>
+                            <input asp-for="TestingDate" type="date" class="form-control" required>
+                        </div>
 
-            <dt class="col-sm-4">Срок до испытания:</dt>
-            <dd class="col-sm-8">@Model.GetAge(Model.TestingDate) дней</dd>
+                        <div class="mb-3">
+                            <label asp-for="TestMode" class="form-label">Режим испытаний</label>
+                            <select asp-for="TestMode" class="form-select">
+                                <option value="Стандарт">Стандарт</option>
+                                <option value="Ускоренный">Ускоренный</option>
+                                <option value="Контрольный">Контрольный</option>
+                            </select>
+                        </div>
 
-            <dt class="col-sm-4">Оснастка:</dt>
-            <dd class="col-sm-8">
-                @if (Model.ToolingLinks.Any())
-                {
-                    <ul>
-                        @foreach (var link in Model.ToolingLinks)
-                        {
-                            <li>@link.Tooling.Name</li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <span>Не указана</span>
-                }
-            </dd>
+                        <div class="mb-3">
+                            <label asp-for="FurnaceProgramId" class="form-label">Печь/программа</label>
+                            <select asp-for="FurnaceProgramId" class="form-select">
+                                <option value="">-- Выберите --</option>
+                                @foreach (var program in furnacePrograms)
+                                {
+                                    <option value="@program.Id">@program.Name</option>
+                                }
+                            </select>
+                        </div>
 
-            <dt class="col-sm-4">Создал:</dt>
-            <dd class="col-sm-8">@Model.CreatedBy</dd>
-        </dl>
-    </div>
+                        <div class="mb-3">
+                            <label asp-for="StoragePlaceId" class="form-label">Место хранения</label>
+                            <select asp-for="StoragePlaceId" class="form-select">
+                                <option value="">-- Выберите --</option>
+                                @foreach (var place in storagePlaces)
+                                {
+                                    <option value="@place.Id">@place.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Результаты испытаний</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="WeightAfterTest" class="form-label">Вес после испытаний, г</label>
+                                    <input asp-for="WeightAfterTest" type="number" step="0.1" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="DimensionAAfterTest" class="form-label">a, мм</label>
+                                    <input asp-for="DimensionAAfterTest" type="number" step="0.1" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="DimensionBAfterTest" class="form-label">b, мм</label>
+                                    <input asp-for="DimensionBAfterTest" type="number" step="0.1" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="DimensionCAfterTest" class="form-label">h, мм</label>
+                                    <input asp-for="DimensionCAfterTest" type="number" step="0.1" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Density" class="form-label">Плотность, кг/м³</label>
+                                    <input asp-for="Density" type="number" step="1" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Потери плотности, кг/м³</label>
+                                    <input class="form-control" value="@Model.DensityLoss?.ToString("F0")" readonly>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="BreakingLoad" class="form-label">Разрушающая нагрузка, кН</label>
+                                    <input asp-for="BreakingLoad" type="number" step="0.01" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="WetCoefficient" class="form-label">МК (влажностный коэффициент)</label>
+                                    <input asp-for="WetCoefficient" type="number" step="0.01" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Прочность с учетом МК, МПа</label>
+                                    <input class="form-control" value="@Model.StrengthWithCoefficient?.ToString("F2")" readonly>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="TestingTemperature" class="form-label">Температура воздуха, °C</label>
+                                    <input asp-for="TestingTemperature" type="number" step="0.1" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="TestingHumidity" class="form-label">Влажность воздуха, %</label>
+                                    <input asp-for="TestingHumidity" type="number" step="0.1" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="TestedBy" class="form-label">Испытания провел *</label>
+                                    <input asp-for="TestedBy" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="MU" class="form-label">МУ</label>
+                                    <input asp-for="MU" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="MUStar" class="form-label">МУ*</label>
+                                    <input asp-for="MUStar" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="PP" class="form-label">ПП</label>
+                                    <input asp-for="PP" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Comment" class="form-label">Примечания</label>
+                            <textarea asp-for="Comment" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a asp-action="TrialJournal" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Назад к журналу
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Сохранить изменения
+            </button>
+        </div>
+    </form>
 </div>
 
-@if (SignInManager.IsSignedIn(User))
-{
-    <div class="mt-4">
-        <h5>Редактирование</h5>
-        <form id="updateTrialForm">
-            <input type="hidden" name="Id" value="@Model.Id" />
-
-            <div class="mb-3">
-                <label class="form-label">Название</label>
-                <input type="text" class="form-control" name="Name" value="@Model.Name" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Серия</label>
-                <input type="text" class="form-control" name="SeriesName" value="@Model.SeriesName">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Дата создания</label>
-                <input type="date" class="form-control" name="SampleCreationDate"
-                       value="@Model.SampleCreationDate.ToString("yyyy-MM-dd")" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Дата испытания</label>
-                <input type="date" class="form-control" name="TestingDate"
-                       value="@Model.TestingDate.ToString("yyyy-MM-dd")" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Сохранить</button>
-        </form>
-    </div>
-
+@section Scripts {
     <script>
-        $(function() {
-            $('#updateTrialForm').submit(function(e) {
-                e.preventDefault();
-                $.post('@Url.Action("UpdateTrial", "Trials")', $(this).serialize(), function() {
-                    alert('Изменения сохранены');
-                    $('#detailsModal').modal('hide');
-                    location.reload();
-                });
-            });
+        // Автоматический расчет производных значений
+        $('input[name="BreakingLoad"], input[name="WetCoefficient"]').on('input', function () {
+            const load = parseFloat($('input[name="BreakingLoad"]').val()) || 0;
+            const coeff = parseFloat($('input[name="WetCoefficient"]').val()) || 0;
+            const strength = (load * coeff).toFixed(2);
+            $('input[name="StrengthWithCoefficient"]').val(isNaN(strength) ? '' : strength);
         });
     </script>
 }

@@ -246,6 +246,9 @@ namespace TrialsServerArchive.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<double>("Density")
+                        .HasColumnType("float");
+
                     b.Property<double>("DimensionA")
                         .HasColumnType("float");
 
@@ -291,6 +294,26 @@ namespace TrialsServerArchive.Migrations
                     b.HasDiscriminator<string>("ObjectType").HasValue("Sample");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("TrialsServerArchive.Models.Objects.FurnaceProgram", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FurnacePrograms");
                 });
 
             modelBuilder.Entity("TrialsServerArchive.Models.Objects.SamplePhoto", b =>
@@ -344,6 +367,26 @@ namespace TrialsServerArchive.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SampleTypes");
+                });
+
+            modelBuilder.Entity("TrialsServerArchive.Models.Objects.StoragePlace", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StoragePlaces");
                 });
 
             modelBuilder.Entity("TrialsServerArchive.Models.Tooling", b =>
@@ -400,11 +443,68 @@ namespace TrialsServerArchive.Migrations
                 {
                     b.HasBaseType("TrialsServerArchive.Models.Objects.BaseObject");
 
+                    b.Property<double?>("BreakingLoad")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("DensityAfterTest")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("DimensionAAfterTest")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("DimensionBAfterTest")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("DimensionCAfterTest")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("FurnaceProgramId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MU")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MUStar")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PP")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("SampleId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("StoragePlaceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TestMode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TestedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("TestingDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<double?>("TestingHumidity")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("TestingTemperature")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("WeightAfterTest")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("WetCoefficient")
+                        .HasColumnType("float");
+
+                    b.HasIndex("FurnaceProgramId");
+
+                    b.HasIndex("StoragePlaceId");
 
                     b.HasDiscriminator().HasValue("TrialObject");
                 });
@@ -513,6 +613,21 @@ namespace TrialsServerArchive.Migrations
                     b.Navigation("Tooling");
 
                     b.Navigation("TrialObject");
+                });
+
+            modelBuilder.Entity("TrialsServerArchive.Models.Objects.TrialObject", b =>
+                {
+                    b.HasOne("TrialsServerArchive.Models.Objects.FurnaceProgram", "FurnaceProgram")
+                        .WithMany()
+                        .HasForeignKey("FurnaceProgramId");
+
+                    b.HasOne("TrialsServerArchive.Models.Objects.StoragePlace", "StoragePlace")
+                        .WithMany()
+                        .HasForeignKey("StoragePlaceId");
+
+                    b.Navigation("FurnaceProgram");
+
+                    b.Navigation("StoragePlace");
                 });
 
             modelBuilder.Entity("TrialsServerArchive.Models.Objects.BaseObject", b =>

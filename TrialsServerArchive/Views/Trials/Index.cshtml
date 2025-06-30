@@ -1,128 +1,153 @@
-﻿@model X.PagedList.IPagedList<TrialObject>
+﻿@model IEnumerable<TrialsServerArchive.Models.Objects.TrialObject>
+@using TrialsServerArchive.Models
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
-    ViewData["Title"] = "Испытанные образцы";
+    ViewData["Title"] = "Журнал образцов";
+    var standardAges = new[] { 2, 7, 9, 28, 90, 180, 360 };
 }
 
 <style>
-    .group-header {
-        background-color: #f8f9fa;
+    .trial-table {
+        font-size: 0.85rem;
+    }
+    
+    .highlight-row {
+        border: 2px solid #ff0000 !important;
+        animation: pulse 2s infinite;
+    }
+    
+    .age-cell {
+        text-align: center;
         font-weight: bold;
-        border-top: 2px solid #dee2e6;
-        border-bottom: 1px solid #dee2e6;
+        min-width: 30px;
+        padding: 3px !important;
     }
-
-    .group-row {
-        border-bottom: 1px solid #dee2e6;
+    
+    .results-group {
+        background-color: #f0f8ff;
     }
-
-    .last-in-group {
-        border-bottom: 2px solid #dee2e6;
+    
+    .age-group {
+        background-color: #fff0f5;
+    }
+    
+    .checkbox-cell {
+        width: 30px;
+        text-align: center;
+    }
+    
+    keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(255,0,0,0); }
+        100% { box-shadow: 0 0 0 0 rgba(255,0,0,0); }
     }
 </style>
 
-<h1>Испытанные образцы</h1>
-
-@if (SignInManager.IsSignedIn(User))
-{
-    <div class="mb-3">
-        <button class="btn btn-success" id="moveToJournalBtn" disabled>
-            <i class="bi bi-journal-arrow-down"></i> Перевести в журнал
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>@ViewData["Title"]</h1>
+        <button id="moveToJournalBtn" class="btn btn-primary" disabled>
+            <i class="bi bi-journal-plus"></i> Занести в журнал
         </button>
     </div>
-}
 
-<div class="card">
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    @if (SignInManager.IsSignedIn(User))
-                    {
-                        <th style="width: 40px;">
-                            <input type="checkbox" id="selectAll" />
-                        </th>
-                    }
-                    <th>Название</th>
-                    <th>Серия</th>
-                    <th>Срок до испытания (дней)</th>
-                    <th style="width: 150px;">Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                @{
-                    var groups = Model
-                    .OrderBy(t => t.SeriesName)
-                    .GroupBy(t => t.SeriesName);
-
-                    foreach (var group in groups)
-                    {
-                        <tr class="group-header">
-                            <td colspan="4">
-                                Серия: @(string.IsNullOrEmpty(group.Key) ? "Без серии" : group.Key)
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-danger ungroup-btn"
-                                        data-series="@group.Key">
-                                    <i class="bi bi-x-circle"></i> Удалить серию
-                                </button>
-                            </td>
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover trial-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input type="checkbox" id="selectAll">
+                            </th>
+                            <!-- Общие параметры -->
+                            <th>ID</th>
+                            <th>Образец</th>
+                            <th>Дата исп.</th>
+                            <th>Режим</th>
+                            <th>Печь/прог.</th>
+                            <th>Место хр.</th>
+                            
+                            <!-- Нормативный возраст -->
+                            @foreach (var age in standardAges)
+                            {
+                                <th class="age-cell">@age</th>
+                            }
+                            
+                            <!-- Результаты испытаний -->
+                            <th>Вес, г</th>
+                            <th>a, мм</th>
+                            <th>b, мм</th>
+                            <th>h, мм</th>
+                            <th>Плотн.</th>
+                            <th>Потери</th>
+                            <th>Нагрузка</th>
+                            <th>МК</th>
+                            <th>Прочность</th>
+                            <th>Темп.</th>
+                            <th>Влажн.</th>
+                            <th>МУ</th>
+                            <th>МУ*</th>
+                            <th>ПП</th>
+                            <th>Испытал</th>
+                            <th>Прим.</th>
                         </tr>
-
-                        var lastIndex = group.Count() - 1;
-                        var index = 0;
-
-                        foreach (var item in group.OrderBy(t => t.Name))
+                    </thead>
+                    <tbody>
+                        @foreach (var trial in Model)
                         {
-                            <tr class="group-row @(index == lastIndex ? "last-in-group" : "")">
-                                @if (SignInManager.IsSignedIn(User))
+                            var testingAge = trial.TestingAge;
+                            var nextStandardAge = standardAges.FirstOrDefault(a => a > (testingAge ?? 0));
+                            var daysToNextAge = nextStandardAge - (testingAge ?? 0);
+                            
+                            <tr data-id="@trial.Id" class="@(daysToNextAge <= 3 ? "highlight-row" : "")">
+                                <td class="checkbox-cell">
+                                    <input type="checkbox" class="trial-checkbox" data-id="@trial.Id">
+                                </td>
+                                <!-- Общие параметры -->
+                                <td>@trial.Id</td>
+                                <td>@(trial.Name ?? "N/A")</td>
+                                <td>@trial.TestingDate.ToString("dd.MM.yy")</td>
+                                <td>@trial.TestMode</td>
+                                <td>@(trial.FurnaceProgram?.Name ?? "-")</td>
+                                <td>@(trial.StoragePlace?.Name ?? "-")</td>
+                                
+                                <!-- Нормативный возраст -->
+                                @foreach (var age in standardAges)
                                 {
-                                    <td>
-                                        <input type="checkbox" class="rowCheckbox" data-id="@item.Id" />
+                                    <td class="age-cell">
+                                        @if (testingAge >= age)
+                                        {
+                                            @age
+                                        }
                                     </td>
                                 }
-                                <td>@item.Name</td>
-                                <td>@item.SeriesName</td>
-                                <td>@item.GetAge(item.TestingDate)</td>
-                                <td>
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-info details-btn"
-                                                data-id="@item.Id">
-                                            <i class="bi bi-info-circle"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-warning ungroup-one-btn"
-                                                data-id="@item.Id">
-                                            <i class="bi bi-x"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger delete-btn"
-                                                data-id="@item.Id">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
+                                
+                                <!-- Результаты испытаний -->
+                                <td>@trial.WeightAfterTest?.ToString("F1")</td>
+                                <td>@trial.DimensionAAfterTest?.ToString("F1")</td>
+                                <td>@trial.DimensionBAfterTest?.ToString("F1")</td>
+                                <td>@trial.DimensionCAfterTest?.ToString("F1")</td>
+                                <td>@trial.Density.ToString("F0")</td>
+                                <td>@trial.DensityLoss?.ToString("F0")</td>
+                                <td>@trial.BreakingLoad?.ToString("F2")</td>
+                                <td>@trial.WetCoefficient?.ToString("F2")</td>
+                                <td>@trial.StrengthWithCoefficient?.ToString("F2")</td>
+                                <td>@trial.TestingTemperature?.ToString("F1")</td>
+                                <td>@trial.TestingHumidity?.ToString("F1")</td>
+                                <td>@trial.MU</td>
+                                <td>@trial.MUStar</td>
+                                <td>@trial.PP</td>
+                                <td>@trial.TestedBy</td>
+                                <td>@trial.Comment</td>
                             </tr>
-                            index++;
                         }
-                    }
-                }
-            </tbody>
-        </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</div>
-
-<div class="d-flex justify-content-center">
-    @Html.PagedListPager(
-            Model,
-            page => Url.Action("Index", new { page }),
-            new PagedListRenderOptions
-    {
-        LiElementClasses = new[] { "page-item" },
-        PageClasses = new[] { "page-link" },
-        UlElementClasses = new[] { "pagination" },
-        MaximumPageNumbersToDisplay = 5
-    }
-            )
 </div>
 
 @if (SignInManager.IsSignedIn(User))
@@ -148,9 +173,28 @@
             </div>
         </div>
     </div>
+}
 
-    @section Scripts {
+@section Scripts {
     <script>
+        $(function () {
+            // Подсветка строк, требующих внимания
+            function updateHighlighting() {
+                $('tr[data-id]').each(function () {
+                    const daysToNext = $(this).data('days-to-next');
+                    if (daysToNext !== undefined && daysToNext <= 3) {
+                        $(this).addClass('highlight-row');
+                    } else {
+                        $(this).removeClass('highlight-row');
+                    }
+                });
+            }
+
+            // Обновляем каждую минуту
+            setInterval(updateHighlighting, 60000);
+            updateHighlighting();
+        });
+
         $(function () {
             // Выбор всех/снятие всех чекбоксов
             $('#selectAll').change(function () {
@@ -174,40 +218,45 @@
                 $('#journalIds').val(ids.join(','));
                 $('#journalModal').modal('show');
             });
-             // Обработчики для кнопок действий
-            $('.ungroup-one-btn').click(function() {
+            // Обработчики для кнопок действий
+            $('.ungroup-one-btn').click(function () {
                 const id = $(this).data('id');
                 if (confirm('Удалить образец из серии?')) {
-                    $.post('@Url.Action("RemoveFromSeries", "Trials")', { id: id }, function() {
+                    $.post('@Url.Action("RemoveFromSeries", "Trials")', { id: id }, function () {
                         location.reload();
                     });
                 }
             });
 
-            $('.ungroup-btn').click(function() {
+            $('.ungroup-btn').click(function () {
                 const series = $(this).data('series');
                 if (confirm(`Удалить все образцы из серии "${series}"?`)) {
-                    $.post('@Url.Action("RemoveSeries", "Trials")', { seriesName: series }, function() {
+                    $.post('@Url.Action("RemoveSeries", "Trials")', { seriesName: series }, function () {
                         location.reload();
                     });
                 }
             });
 
-            $('.delete-btn').click(function() {
+            $('.delete-btn').click(function () {
                 const id = $(this).data('id');
                 if (confirm('Удалить образец полностью?')) {
-                    $.post('@Url.Action("Delete", "Trials")', { id: id }, function() {
+                    $.post('@Url.Action("Delete", "Trials")', { id: id }, function () {
                         location.reload();
                     });
                 }
             });
 
-            $('.details-btn').click(function() {
+            $('.details-btn').click(function () {
                 const id = $(this).data('id');
                 $('#detailsContent').load('@Url.Action("Details", "Trials")?id=' + id);
                 $('#detailsModal').modal('show');
             });
-        });
+
+                // Выделение всех образцов
+                    $('#selectAll').change(function() {
+                        $('.trial-checkbox').prop('checked', this.checked);
+                        updateAddToJournalButton();
+                    });
+                });
     </script>
-    }
 }

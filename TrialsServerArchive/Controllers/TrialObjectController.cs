@@ -121,29 +121,54 @@ namespace TrialsServerArchive.Controllers
         public IActionResult Details(int id)
         {
             var trial = _context.Objects.OfType<TrialObject>()
-                .Include(t => t.ToolingLinks)
-                .ThenInclude(tt => tt.Tooling)
+                .Include(t => t.FurnaceProgram)
+                .Include(t => t.StoragePlace)
                 .FirstOrDefault(t => t.Id == id);
 
             if (trial == null) return NotFound();
-            return PartialView("_TrialDetails", trial);
+
+            ViewBag.FurnacePrograms = _context.FurnacePrograms.ToList();
+            ViewBag.StoragePlaces = _context.StoragePlaces.ToList();
+
+            return View(trial);
         }
 
         [HttpPost]
-        public IActionResult UpdateTrial(TrialObject updatedTrial)
+        public IActionResult SaveTrialDetails(TrialObject model)
         {
-            var existingTrial = _context.Objects.OfType<TrialObject>()
-                .FirstOrDefault(t => t.Id == updatedTrial.Id);
+            try
+            {
+                var existingTrial = _context.Objects.Find(model.Id) as TrialObject;
+                if (existingTrial == null) return NotFound();
 
-            if (existingTrial == null) return NotFound();
+                // Обновляем поля
+                existingTrial.TestingDate = model.TestingDate;
+                existingTrial.TestMode = model.TestMode;
+                existingTrial.FurnaceProgramId = model.FurnaceProgramId;
+                existingTrial.StoragePlaceId = model.StoragePlaceId;
+                existingTrial.WeightAfterTest = model.WeightAfterTest;
+                existingTrial.DimensionAAfterTest = model.DimensionAAfterTest;
+                existingTrial.DimensionBAfterTest = model.DimensionBAfterTest;
+                existingTrial.DimensionCAfterTest = model.DimensionCAfterTest;
+                existingTrial.Density = model.Density;
+                existingTrial.BreakingLoad = model.BreakingLoad;
+                existingTrial.WetCoefficient = model.WetCoefficient;
+                existingTrial.TestingTemperature = model.TestingTemperature;
+                existingTrial.TestingHumidity = model.TestingHumidity;
+                existingTrial.MU = model.MU;
+                existingTrial.MUStar = model.MUStar;
+                existingTrial.PP = model.PP;
+                existingTrial.TestedBy = model.TestedBy;
+                existingTrial.Comment = model.Comment;
 
-            existingTrial.Name = updatedTrial.Name;
-            existingTrial.SeriesName = updatedTrial.SeriesName;
-            existingTrial.SampleCreationDate = updatedTrial.SampleCreationDate;
-            existingTrial.TestingDate = updatedTrial.TestingDate;
+                _context.SaveChanges();
 
-            _context.SaveChanges();
-            return Ok();
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return RedirectToAction(nameof(Details), new { id = model.Id });
+            }
         }
     }
 }

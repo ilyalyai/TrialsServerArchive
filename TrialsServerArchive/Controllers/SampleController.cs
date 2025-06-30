@@ -28,13 +28,13 @@ namespace TrialsServerArchive.Controllers
             int pageSize = 20; // Количество элементов на странице
             int pageNumber = page ?? 1; // Номер текущей страницы (по умолчанию 1)
 
-            var entries = _context.Objects.OfType<BaseObject>().ToPagedList(pageNumber, pageSize);
+            var entries = _context.Objects.OfType<Sample>().ToPagedList(pageNumber, pageSize);
 
             return View(entries);
         }
 
         [HttpPost]
-        public IActionResult CreateSample(BaseObject sample)
+        public IActionResult CreateSample(Sample sample, string SampleTypeId)
         {
             try
             {
@@ -50,9 +50,26 @@ namespace TrialsServerArchive.Controllers
                     else
                         sample.CreatedBy = "System"; // Резервное значение
 
+                    sample.SampleType = _context.SampleTypes.First(s => s.Id == int.Parse(SampleTypeId));
+
+                    switch (sample.SampleType.Name.ToLower()[0])
+                    {
+                        case 'ц':
+                            //цилинд - пи (д/2) h
+                            sample.Density = sample.Weight / (Math.PI * sample.DimensionA * Math.Pow((0.5 * sample.DimensionB), 2));
+                            break;
+
+                        //куб, призма и прочее - просто перемножим стороны
+                        case 'п':
+                        case 'к':
+                        default:
+                            sample.Density = sample.Weight / (sample.DimensionA * sample.DimensionB * sample.DimensionC ?? 1);
+                            break;
+                    }
+
                     _context.Objects.Add(sample);
                     _context.SaveChanges();
-                    return Ok(new { Result = true});
+                    return Ok(new { Result = true });
                 }
                 // Сбор ошибок валидации
                 var errors = ModelState.Values
@@ -81,8 +98,8 @@ namespace TrialsServerArchive.Controllers
         public IActionResult GroupSamples(string ids, string seriesName)
         {
             var idArray = ids.Split(',').Select(int.Parse).ToArray();
-            var samples = _context.Objects.OfType<BaseObject>().Where(s => idArray.Contains(s.Id));
-            foreach (var sample in samples)
+            var samples = _context.Objects.OfType<Sample>().Where(s => idArray.Contains(s.Id));
+            foreach (var sample in samples) 
             {
                 sample.SeriesName = seriesName;
             }
@@ -97,15 +114,32 @@ namespace TrialsServerArchive.Controllers
             var toolIdArray = toolingIds.Split(',').Select(int.Parse).ToArray();
             foreach (var id in idArray)
             {
-                var sample = _context.Objects.OfType<BaseObject>().First(s => s.Id == id);
+                var sample = _context.Objects.OfType<Sample>().First(s => s.Id == id);
                 var trial = new TrialObject
                 {
+                    // Копируем все свойства из исходного образца
                     SeriesName = sample.SeriesName,
                     Name = sample.Name,
                     SampleCreationDate = sample.SampleCreationDate,
+                    CreatedBy = sample.CreatedBy,
+
+                    // Критически важные свойства
                     SampleId = sample.Id,
+                    SampleTypeId = sample.SampleTypeId,
+
+                    // Свойства испытаний
                     TestingDate = testingDate,
-                    CreatedBy = sample.CreatedBy
+
+                    // Копируем геометрические параметры
+                    DimensionA = sample.DimensionA,
+                    DimensionB = sample.DimensionB,
+                    DimensionC = sample.DimensionC,
+                    Weight = sample.Weight,
+
+                    // Дополнительные свойства
+                    JournalType = sample.JournalType,
+                    Comment = sample.Comment
+
                 };
 
                 // Добавляем выбранные инструменты через промежуточную сущность
@@ -130,7 +164,7 @@ namespace TrialsServerArchive.Controllers
         [HttpPost]
         public IActionResult RemoveFromSeries(int id)
         {
-            var sample = _context.Objects.OfType<BaseObject>().FirstOrDefault(s => s.Id == id);
+            var sample = _context.Objects.OfType<Sample>().FirstOrDefault(s => s.Id == id);
             if (sample != null)
             {
                 sample.SeriesName = null;
@@ -142,7 +176,7 @@ namespace TrialsServerArchive.Controllers
         [HttpPost]
         public IActionResult RemoveSeries(string seriesName)
         {
-            var samples = _context.Objects.OfType<BaseObject>()
+            var samples = _context.Objects.OfType<Sample>()
                 .Where(s => s.SeriesName == seriesName);
 
             foreach (var sample in samples)
@@ -157,7 +191,7 @@ namespace TrialsServerArchive.Controllers
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            var sample = _context.Objects.OfType<BaseObject>().FirstOrDefault(s => s.Id == id);
+            var sample = _context.Objects.OfType<Sample>().FirstOrDefault(s => s.Id == id);
             if (sample != null)
             {
                 // Удаление связанных фотографий
@@ -175,15 +209,15 @@ namespace TrialsServerArchive.Controllers
         {
             ViewBag.Toolings = _context.Toolings.ToList();
             ViewBag.SampleTypes = _context.SampleTypes.ToList();
-            var sample = _context.Objects.OfType<BaseObject>().FirstOrDefault(s => s.Id == id);
+            var sample = _context.Objects.OfType<Sample>().FirstOrDefault(s => s.Id == id);
             if (sample == null) return NotFound();
             return PartialView("_SampleDetails", sample);
         }
 
         [HttpPost]
-        public IActionResult UpdateSample(BaseObject updatedSample)
+        public IActionResult UpdateSample(Sample updatedSample)
         {
-            var existingSample = _context.Objects.OfType<BaseObject>()
+            var existingSample = _context.Objects.OfType<Sample>()
                 .FirstOrDefault(s => s.Id == updatedSample.Id);
 
             if (existingSample == null) return NotFound();
@@ -209,7 +243,7 @@ namespace TrialsServerArchive.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(BaseObject model)
+        public IActionResult Edit(Sample model)
         {
             if (ModelState.IsValid)
             {
@@ -335,7 +369,7 @@ namespace TrialsServerArchive.Controllers
             {
                 // Убедитесь, что передаете SampleTypes во ViewBag
                 ViewBag.SampleTypes = _context.SampleTypes.ToList();
-                return PartialView("_CreateSamplePartial", new BaseObject());
+                return PartialView("_CreateSamplePartial", new Sample());
             }
             catch (Exception ex)
             {
