@@ -294,6 +294,110 @@
             $('.modal').on('show.bs.modal', function () {
                 $(this).find('.alert-danger').remove();
             });
+
+            // УНИВЕРСАЛЬНАЯ ФУНКЦИЯ АВТООПРЕДЕЛЕНИЯ ФОРМЫ
+            function initShapeAutoDetection(prefix) {
+                const nameInput = $(`#${prefix}TypeName`);
+                const shapeSelect = $(`#${prefix}ShapeType`);
+                const infoElement = $(`#${prefix}AutoShapeInfo`);
+
+                // Функция автоопределения
+                function autoDetectShape(name) {
+                    if (!name) return '';
+                    const firstChar = name.charAt(0).toUpperCase();
+                    switch (firstChar) {
+                        case 'К': return 'Куб';
+                        case 'П': return 'Призма';
+                        case 'Ц': return 'Цилиндр';
+                        default: return '';
+                    }
+                }
+
+                // Обработчик ввода
+                nameInput.off('input').on('input', function() {
+                    const name = $(this).val().trim();
+                    const detectedShape = autoDetectShape(name);
+
+                    if (detectedShape) {
+                        if (!shapeSelect.val()) {
+                            shapeSelect.val(detectedShape);
+                            infoElement.text(`Автоопределена форма: ${detectedShape}`);
+                        }
+                    } else {
+                        infoElement.text('');
+                    }
+                });
+
+                // Сброс при ручном выборе
+                shapeSelect.off('change').on('change', function() {
+                    infoElement.text('');
+                });
+
+                // АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПРИ ЗАГРУЗКЕ ДАННЫХ
+                const currentName = nameInput.val();
+                if (currentName) {
+                    const detectedShape = autoDetectShape(currentName);
+                    
+                    // Если форма не установлена - устанавливаем автоопределение
+                    if (detectedShape && !shapeSelect.val()) {
+                        shapeSelect.val(detectedShape);
+                        infoElement.text(`Автоопределена форма: ${detectedShape}`);
+                    }
+                    
+                    // Если форма уже установлена - показываем подсказку
+                    else if (detectedShape) {
+                        infoElement.text(`Автоопределение: ${detectedShape} (выбрано вручную)`);
+                    }
+                }
+            }
+
+            // Инициализация для окна редактирования
+            $('#editSampleTypeModal').on('shown.bs.modal', function() {
+                // Убедимся, что контент загружен
+                setTimeout(() => {
+                    initShapeAutoDetection('edit');
+                    
+                    // Если значение уже загружено - запустим автоопределение
+                    const currentName = $('#editTypeName').val();
+                    if (currentName) {
+                        $('#editTypeName').trigger('input');
+                    }
+                }, 100);
+            });
+
+            // Инициализация для окна создания
+            $('#createSampleTypeModal').on('shown.bs.modal', function() {
+                // Сброс предыдущих значений
+                $('#createTypeName').val('');
+                $('#createShapeType').val('');
+                $('#createAutoShapeInfo').text('');
+                
+                // Инициализация автоопределения
+                initShapeAutoDetection('create');
+                
+                // Фокус на поле ввода
+                $('#createTypeName').focus();
+            });
+
+            // Инициализация форм
+            setupAjaxForm('#editTypeForm');
+            setupAjaxForm('#createTypeForm');
+
+            // Функция показа ошибок
+            function showFormErrors(container, response) {
+                let errorHtml = '<ul>';
+                if (response.errors && response.errors.length > 0) {
+                    response.errors.forEach(error => {
+                        errorHtml += `<li>${error}</li>`;
+                    });
+                } else if (response.message) {
+                    errorHtml += `<li>${response.message}</li>`;
+                } else {
+                    errorHtml += '<li>Произошла ошибка при обработке запроса</li>';
+                }
+                errorHtml += '</ul>';
+                container.html(errorHtml).removeClass('d-none');
+            }
         });
     </script>
 }

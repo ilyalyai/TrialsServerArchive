@@ -1,22 +1,32 @@
-﻿<!-- Пример для _EditSampleTypeModal.cshtml -->
-@model SampleType
+﻿@model SampleType
 
 <div class="modal-header">
     <h5 class="modal-title">Редактировать тип образца</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
-<form asp-action="UpdateSampleType" data-ajax="true">
+<form asp-action="UpdateSampleType" data-ajax="true" id="editTypeForm">
     <div class="modal-body">
         <input type="hidden" asp-for="Id" />
         <div class="mb-3">
-            <label asp-for="Name" class="form-label"></label>
-            <input asp-for="Name" class="form-control" />
+            <label asp-for="Name" class="form-label">Название типа</label>
+            <input asp-for="Name" class="form-control" id="editTypeName" />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
         <div class="mb-3">
-            <label asp-for="Description" class="form-label"></label>
+            <label class="form-label">Форма образца</label>
+            <select class="form-select" id="editShapeType" name="ShapeType">
+                <option value="">Выберите форму</option>
+                <option value="Куб">Куб</option>
+                <option value="Призма">Призма</option>
+                <option value="Цилиндр">Цилиндр</option>
+            </select>
+            <small id="editAutoShapeInfo" class="form-text text-muted"></small>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Описание</label>
             <textarea asp-for="Description" class="form-control"></textarea>
         </div>
+        <div id="editTypeErrors" class="alert alert-danger d-none"></div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>

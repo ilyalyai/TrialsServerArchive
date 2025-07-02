@@ -1,5 +1,4 @@
-﻿<!-- Partial Views (пример для _CreateSampleTypeModal.cshtml) -->
-@model SampleType
+﻿@model SampleType
 
 <div class="modal fade" id="createSampleTypeModal" tabindex="-1">
     <div class="modal-dialog">
@@ -8,17 +7,28 @@
                 <h5 class="modal-title">Добавить тип образца</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="CreateSampleType" data-ajax="true">
+            <form asp-action="CreateSampleType" data-ajax="true" id="createTypeForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label asp-for="Name" class="form-label"></label>
-                        <input asp-for="Name" class="form-control" />
+                        <label asp-for="Name" class="form-label">Название типа</label>
+                        <input asp-for="Name" class="form-control" id="createTypeName" />
                         <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>                   
+                    <div class="mb-3">
+                        <label class="form-label">Форма образца</label>
+                        <select class="form-select" id="createShapeType" name="ShapeType">
+                            <option value="">Выберите форму</option>
+                            <option value="Куб">Куб</option>
+                            <option value="Призма">Призма</option>
+                            <option value="Цилиндр">Цилиндр</option>
+                        </select>
+                        <small id="createAutoShapeInfo" class="form-text text-muted"></small>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Description" class="form-label"></label>
+                        <label asp-for="Description" class="form-label">Описание</label>
                         <textarea asp-for="Description" class="form-control"></textarea>
                     </div>
+                    <div id="createTypeErrors" class="alert alert-danger d-none"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>

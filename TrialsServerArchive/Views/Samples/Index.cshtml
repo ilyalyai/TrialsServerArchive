@@ -384,7 +384,7 @@
         // Динамическое управление полями размеров
         $('select[name="SampleTypeId"]').change(function() {
             const type = $(this).find('option:selected').text();
-            if (type === 'Ц') {
+            if (type[0] === 'Ц') {
                 $('#dimensionCInput').prop('disabled', true).val('');
             } else {
                 $('#dimensionCInput').prop('disabled', false);

@@ -12,7 +12,7 @@ using TrialsServerArchive.Data;
 namespace TrialsServerArchive.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250630132846_InitialCreate")]
+    [Migration("20250702122600_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -294,7 +294,7 @@ namespace TrialsServerArchive.Migrations
 
                     b.ToTable("Objects");
 
-                    b.HasDiscriminator<string>("ObjectType").HasValue("Sample");
+                    b.HasDiscriminator<string>("ObjectType").HasValue("BaseObject");
 
                     b.UseTphMappingStrategy();
                 });
@@ -365,6 +365,9 @@ namespace TrialsServerArchive.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShapeType")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -440,6 +443,13 @@ namespace TrialsServerArchive.Migrations
                     b.HasIndex("ToolingId");
 
                     b.ToTable("TrialToolings");
+                });
+
+            modelBuilder.Entity("TrialsServerArchive.Models.Objects.Sample", b =>
+                {
+                    b.HasBaseType("TrialsServerArchive.Models.Objects.BaseObject");
+
+                    b.HasDiscriminator().HasValue("Sample");
                 });
 
             modelBuilder.Entity("TrialsServerArchive.Models.Objects.TrialObject", b =>
