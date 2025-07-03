@@ -1,5 +1,4 @@
 ﻿@model TrialsServerArchive.Models.Objects.TrialObject
-
 @{
     ViewData["Title"] = "Редактирование результатов испытаний";
     var furnacePrograms = ViewBag.FurnacePrograms as IEnumerable<FurnaceProgram> ?? new List<FurnaceProgram>();
@@ -10,7 +9,7 @@
     <h2>@ViewData["Title"]</h2>
     <hr />
 
-    <form asp-action="SaveTrialDetails" method="post">
+    <form asp-action="Edit" method="post">
         <input type="hidden" asp-for="Id" />
 
         <div class="row">
@@ -167,7 +166,7 @@
         </div>
 
         <div class="d-flex justify-content-between">
-            <a asp-action="TrialJournal" class="btn btn-secondary">
+            <a asp-action="Index" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Назад к журналу
             </a>
             <button type="submit" class="btn btn-primary">

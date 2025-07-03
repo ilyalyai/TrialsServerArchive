@@ -68,6 +68,9 @@ namespace TrialsServerArchive.Models.Objects
                 ? (int)(TestingDate - SampleCreationDate).TotalDays
                 : null;
 
+        [NotMapped]
+        public int? DaysToNextAge { get; set; }
+
     }
 
     // Модель для печей/программ
