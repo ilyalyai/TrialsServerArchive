@@ -7,11 +7,11 @@ using X.PagedList.Extensions;
 
 namespace TrialsServerArchive.Controllers
 {
-    public class JournalController : Controller
+    public class JournalObController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public JournalController(ApplicationDbContext context) => _context = context;
+        public JournalObController(ApplicationDbContext context) => _context = context;
 
         public IActionResult Index(int? page)
         {
@@ -19,6 +19,7 @@ namespace TrialsServerArchive.Controllers
             int pageNumber = page ?? 1; // Номер текущей страницы (по умолчанию 1)
 
             var entries = _context.Objects.OfType<ObjectInJournal>()
+                .Where(o => o.JournalType == JournalType.OB)
                 .Include(j => j.ToolingLinks)
                 .ThenInclude(tt => tt.Tooling)
                 .ToPagedList(pageNumber, pageSize);

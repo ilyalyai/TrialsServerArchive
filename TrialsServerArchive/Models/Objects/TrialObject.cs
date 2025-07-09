@@ -19,8 +19,7 @@ namespace TrialsServerArchive.Models.Objects
         public double? DensityAfterTest { get; set; } // Плотность, кг/м³
 
         [NotMapped]
-        public double? DensityLoss =>
-            Density - DensityAfterTest;
+        public double? DensityLoss => Density - DensityAfterTest;
 
         public double? BreakingLoad { get; set; } // Разрушающая нагрузка, кН
         public double? WetCoefficient { get; set; } // МК (влажностный коэффициент)

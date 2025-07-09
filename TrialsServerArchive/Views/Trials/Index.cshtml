@@ -25,29 +25,25 @@
         padding: 3px !important;
     }
 
-    .results-group {
-        background-color: #f0f8ff;
-    }
-
-    .age-group {
-        background-color: #fff0f5;
-    }
-
-    .checkbox-cell {
-        width: 30px;
-        text-align: center;
-    }
-
     .group-header {
         background-color: #e9ecef;
         font-weight: bold;
-        position: sticky;
-        top: 0;
-        z-index: 10;
+        text-align: center;
     }
 
     .actions-cell {
         width: 120px;
+    }
+
+    .sub-header {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .fixed-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
 
     @@keyframes pulse {
@@ -77,50 +73,101 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover trial-table">
-                    <thead class="table-light">
+                    <thead class="table-light fixed-header">
+                        <!-- Первая строка заголовка: группы свойств -->
                         <tr>
-                            <th class="checkbox-cell">
+                            <th rowspan="3" class="checkbox-cell align-middle">
                                 <input type="checkbox" id="selectAll">
                             </th>
-                            <!-- Общие параметры -->
-                            <th>ID</th>
-                            <th>Образец</th>
-                            <th>Дата исп.</th>
-                            <th>Режим</th>
-                            <th>Печь/прог.</th>
-                            <th>Место хр.</th>
+                            <th rowspan="3" class="align-middle">ID</th>
+
+                            <th colspan="9" class="group-header">Общие данные</th>
+                            <th colspan="7" class="group-header">Нормативный возраст</th>
+                            <th colspan="15" class="group-header">Результаты испытаний</th>
+
+                            <th rowspan="3" class="actions-cell align-middle">Действия</th>
+                        </tr>
+
+                        <!-- Вторая строка заголовка: подгруппы свойств -->
+                        <tr>
+                            <!-- Общие данные -->
+                            <th colspan="3" class="sub-header">Идентификация</th>
+                            <th colspan="4" class="sub-header">Параметры</th>
+                            <th colspan="2" class="sub-header">Характеристики</th>
 
                             <!-- Нормативный возраст -->
+                            <th colspan="7" class="sub-header">Сроки испытаний</th>
+
+                            <!-- Результаты испытаний -->
+                            <th colspan="6" class="sub-header">Параметры после испытаний</th>
+                            <th colspan="3" class="sub-header">Прочность</th>
+                            <th colspan="2" class="sub-header">Условия</th>
+                            <th colspan="3" class="sub-header">Документация</th>
+                            <th colspan="1" class="sub-header">Места</th>
+                        </tr>
+
+                        <!-- Третья строка заголовка: конкретные свойства -->
+                        <tr>
+                            <!-- Общие данные: Идентификация -->
+                            <th class="sub-header">Наименование</th>
+                            <th class="sub-header">Тип образца</th>
+                            <th class="sub-header">Номер</th>
+
+                            <!-- Общие данные: Параметры -->
+                            <th class="sub-header">Вес, г</th>
+                            <th class="sub-header">а, мм</th>
+                            <th class="sub-header">b, мм</th>
+                            <th class="sub-header">h, мм</th>
+
+                            <!-- Общие данные: Характеристики -->
+                            <th class="sub-header">Плотн., кг/м³</th>
+                            <th class="sub-header">Возраст, сут.</th>
+
+                            <!-- Нормативный возраст: Сроки испытаний -->
                             @foreach (var age in standardAges)
                             {
                                 <th class="age-cell">@age</th>
                             }
 
-                            <!-- Результаты испытаний -->
-                            <th>Вес, г</th>
-                            <th>a, мм</th>
-                            <th>b, мм</th>
-                            <th>h, мм</th>
-                            <th>Плотн.</th>
-                            <th>Потери</th>
-                            <th>Нагрузка</th>
-                            <th>МК</th>
-                            <th>Прочность</th>
-                            <th>Темп.</th>
-                            <th>Влажн.</th>
-                            <th>МУ</th>
-                            <th>МУ*</th>
-                            <th>ПП</th>
-                            <th>Испытал</th>
-                            <th>Прим.</th>
-                            <th class="actions-cell">Действия</th>
+                            <!-- Результаты испытаний: Параметры после испытаний -->
+                            <th class="sub-header">Режим</th>
+                            <th class="sub-header">Вес, г</th>
+                            <th class="sub-header">а, мм</th>
+                            <th class="sub-header">b, мм</th>
+                            <th class="sub-header">h, мм</th>
+                            <th class="sub-header">Плотн., кг/м³</th>
+
+                            <!-- Результаты испытаний: Прочность -->
+                            <th class="sub-header">Потери, кг/м³</th>
+                            <th class="sub-header">Нагрузка, кН</th>
+                            <th class="sub-header">МК</th>
+
+                            <!-- Результаты испытаний: Прочность (продолжение) -->
+                            <th class="sub-header">Прочность, МПа</th>
+
+                            <!-- Результаты испытаний: Условия -->
+                            <th class="sub-header">Темп., °C</th>
+                            <th class="sub-header">Влажн., %</th>
+
+                            <!-- Результаты испытаний: Документация -->
+                            <th class="sub-header">МУ</th>
+                            <th class="sub-header">МУ*</th>
+                            <th class="sub-header">ПП</th>
+
+                            <!-- Результаты испытаний: Места -->
+                            <th class="sub-header">Печь/прог.</th>
+                            <th class="sub-header">Место хр.</th>
+
+                            <!-- Дополнительные поля -->
+                            <th class="sub-header">Испытал</th>
+                            <th class="sub-header">Прим.</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var seriesGroup in Model.GroupBy(t => t.SeriesName).OrderBy(g => g.Key))
                         {
                             <tr class="group-header">
-                                <td colspan="26">
+                                <td colspan="32">
                                     <strong>Серия: @(seriesGroup.Key ?? "Без серии")</strong>
                                     @if (!string.IsNullOrEmpty(seriesGroup.Key))
                                     {
@@ -136,22 +183,33 @@
 
                             @foreach (var trial in seriesGroup)
                             {
-                                <tr data-id="@trial.Id" class="@(trial.DaysToNextAge <= 3 ? "highlight-row" : "")">
-                                    <td class="checkbox-cell">
+                                <tr data-id="@trial.Id" data-days-to-next="@trial.DaysToNextAge"
+                                    class="@(trial.DaysToNextAge <= 3 ? "highlight-row" : "")">
+                                    <!-- Checkbox и ID -->
+                                    <td class="checkbox-cell align-middle">
                                         <input type="checkbox" class="trial-checkbox" data-id="@trial.Id">
                                     </td>
-                                    <!-- Общие параметры -->
-                                    <td>@trial.Id</td>
-                                    <td>@(trial.Name ?? "N/A")</td>
-                                    <td>@trial.TestingDate.ToString("dd.MM.yy")</td>
-                                    <td>@trial.TestMode</td>
-                                    <td>@(trial.FurnaceProgram?.Name ?? "-")</td>
-                                    <td>@(trial.StoragePlace?.Name ?? "-")</td>
+                                    <td class="align-middle">@trial.Id</td>
 
-                                    <!-- Нормативный возраст -->
+                                    <!-- Общие данные: Идентификация -->
+                                    <td class="align-middle">@(trial.Name ?? "N/A")</td>
+                                    <td class="align-middle">@(trial.SampleType?.Name ?? "-")</td>
+                                    <td class="align-middle">@trial.SampleId</td>
+
+                                    <!-- Общие данные: Параметры -->
+                                    <td class="align-middle">@trial.Weight.ToString("F1")</td>
+                                    <td class="align-middle">@trial.DimensionA.ToString("F1")</td>
+                                    <td class="align-middle">@trial.DimensionB.ToString("F1")</td>
+                                    <td class="align-middle">@trial.DimensionC?.ToString("F1")</td>
+
+                                    <!-- Общие данные: Характеристики -->
+                                    <td class="align-middle">@trial.Density.ToString("F0")</td>
+                                    <td class="align-middle">@(trial.TestingAge.HasValue ? trial.TestingAge.Value.ToString() : "-")</td>
+
+                                    <!-- Нормативный возраст: Сроки испытаний -->
                                     @foreach (var age in standardAges)
                                     {
-                                        <td class="age-cell">
+                                        <td class="age-cell align-middle">
                                             @if (trial.TestingAge >= age)
                                             {
                                                 @age
@@ -159,24 +217,39 @@
                                         </td>
                                     }
 
-                                    <!-- Результаты испытаний -->
-                                    <td>@trial.WeightAfterTest?.ToString("F1")</td>
-                                    <td>@trial.DimensionAAfterTest?.ToString("F1")</td>
-                                    <td>@trial.DimensionBAfterTest?.ToString("F1")</td>
-                                    <td>@trial.DimensionCAfterTest?.ToString("F1")</td>
-                                    <td>@trial.Density.ToString("F0")</td>
-                                    <td>@trial.DensityLoss?.ToString("F0")</td>
-                                    <td>@trial.BreakingLoad?.ToString("F2")</td>
-                                    <td>@trial.WetCoefficient?.ToString("F2")</td>
-                                    <td>@trial.StrengthWithCoefficient?.ToString("F2")</td>
-                                    <td>@trial.TestingTemperature?.ToString("F1")</td>
-                                    <td>@trial.TestingHumidity?.ToString("F1")</td>
-                                    <td>@trial.MU</td>
-                                    <td>@trial.MUStar</td>
-                                    <td>@trial.PP</td>
-                                    <td>@trial.TestedBy</td>
-                                    <td>@trial.Comment</td>
-                                    <td>
+                                    <!-- Результаты испытаний: Параметры после испытаний -->
+                                    <td class="align-middle">@trial.TestMode</td>
+                                    <td class="align-middle">@trial.WeightAfterTest?.ToString("F1")</td>
+                                    <td class="align-middle">@trial.DimensionAAfterTest?.ToString("F1")</td>
+                                    <td class="align-middle">@trial.DimensionBAfterTest?.ToString("F1")</td>
+                                    <td class="align-middle">@trial.DimensionCAfterTest?.ToString("F1")</td>
+                                    <td class="align-middle">@trial.DensityAfterTest?.ToString("F0")</td>
+
+                                    <!-- Результаты испытаний: Прочность -->
+                                    <td class="align-middle">@trial.DensityLoss?.ToString("F0")</td>
+                                    <td class="align-middle">@trial.BreakingLoad?.ToString("F2")</td>
+                                    <td class="align-middle">@trial.WetCoefficient?.ToString("F2")</td>
+                                    <td class="align-middle">@trial.StrengthWithCoefficient?.ToString("F2")</td>
+
+                                    <!-- Результаты испытаний: Условия -->
+                                    <td class="align-middle">@trial.TestingTemperature?.ToString("F1")</td>
+                                    <td class="align-middle">@trial.TestingHumidity?.ToString("F1")</td>
+
+                                    <!-- Результаты испытаний: Документация -->
+                                    <td class="align-middle">@trial.MU</td>
+                                    <td class="align-middle">@trial.MUStar</td>
+                                    <td class="align-middle">@trial.PP</td>
+
+                                    <!-- Результаты испытаний: Места -->
+                                    <td class="align-middle">@(trial.FurnaceProgram?.Name ?? "-")</td>
+                                    <td class="align-middle">@(trial.StoragePlace?.Name ?? "-")</td>
+
+                                    <!-- Дополнительные поля -->
+                                    <td class="align-middle">@trial.TestedBy</td>
+                                    <td class="align-middle">@trial.Comment</td>
+
+                                    <!-- Действия -->
+                                    <td class="actions-cell align-middle">
                                         <a asp-action="Edit" asp-route-id="@trial.Id" class="btn btn-sm btn-primary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -195,14 +268,15 @@
                 </table>
 
                 <!-- Пагинация -->
-                <div class="d-flex justify-content-center">
+                <div class="d-flex justify-content-center mt-3">
                     @Html.PagedListPager(Model, page => Url.Action("Index", new { page }),
                              new PagedListRenderOptions
                     {
                         LiElementClasses = new[] { "page-item" },
                         PageClasses = new[] { "page-link" },
                         DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
-                        DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded
+                        DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
+                        MaximumPageNumbersToDisplay = 10
                     })
                 </div>
             </div>

@@ -1,0 +1,101 @@
+﻿@model IPagedList<TrialsServerArchive.Models.Objects.ObjectInJournal>
+@using X.PagedList.Mvc.Core;
+@using TrialsServerArchive.Models.Objects;
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    ViewData["Title"] = "Журнал РЕЗ";
+}
+
+<style>
+    /* ... существующие стили ... */
+    .group-header th {
+        background-color: #e9ecef;
+        font-weight: bold;
+        text-align: center;
+    }
+</style>
+
+<div class="container">
+    <h1>Журнал РЕЗ</h1>
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover trial-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th rowspan="3">№ записи</th>
+                            <th rowspan="3">Дата изготовления образца</th>
+                            <th rowspan="3">Маркировка образца</th>
+                            <th rowspan="3">Дата испытания</th>
+                            <th rowspan="3">Режим</th>
+                            <!-- Общие данные -->
+                            <th colspan="6" class="group-header">Характеристика образца</th>
+                            <!-- Результаты испытаний -->
+                            <th colspan="3" class="group-header">Результаты испытаний</th>
+                            <th rowspan="3">Примечания</th>
+                            <th rowspan="3">Условия испытаний (температура (°С) и относительная влажность (%) воздуха)</th>
+                            <th rowspan="3">Подпись лица, испытавшего образцы</th>
+                            <th rowspan="3">Детали</th>
+                        </tr>
+                        <tr>
+                            <!-- Общие данные -->
+                            <th rowspan="2">Масса, гр</th>
+                            <th rowspan="2">Плотность, кг/м3</th>
+                            <th rowspan="2">Средняя плотность, кг/м3</th>
+                            <th rowspan="2" colspan="3">Размер образца, мм</th>
+                            <th rowspan="2">Разрушающая нагрузка на сжатие, кН</th>
+                            <th rowspan="2">Прочность, с учетом м.к., МПа</th>
+                            <th rowspan="2">Средняя прочность, МПа</th>
+                        </tr>
+                        <tr>
+                            <th>а, мм</th>
+                            <th>b, мм</th>
+                            <th>h, мм</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var trial in Model)
+                        {
+                            <tr>
+                                <td>@trial.Id</td>
+                                <td>@trial.SampleCreationDate</td>
+                                <td>@trial.Name</td>
+                                <td>@trial.TestingDate</td>
+                                <td>@trial.TestMode</td>
+                                <td>@trial.Weight</td>
+                                <td>@trial.Density</td>
+                                <td>@trial.DensityAfterTest</td>
+                                <td>@trial.DimensionA.ToString("F1")</td>
+                                <td>@trial.DimensionB.ToString("F1")</td>
+                                <td>@trial.DimensionC?.ToString("F1")</td>
+
+                                <td>@trial.BreakingLoad</td>
+                                <td>@trial.StrengthWithCoefficient</td>
+                                <td>@trial.StrengthWithCoefficient</td>
+                                <td>@trial.Comment</td>
+                                <td>@trial.TestingTemperature °С @trial.TestingHumidity %</td>
+                                <td>""</td>
+                                <td>""</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <!-- Пагинация -->
+                <div class="d-flex justify-content-center">
+                    @Html.PagedListPager(Model, page => Url.Action("Index", new { page }),
+                             new PagedListRenderOptions
+                    {
+                        LiElementClasses = new[] { "page-item" },
+                        PageClasses = new[] { "page-link" },
+                        DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+                        DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded
+                    })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ... остальная часть без изменений ... -->

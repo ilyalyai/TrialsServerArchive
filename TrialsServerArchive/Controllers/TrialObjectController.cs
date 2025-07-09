@@ -30,22 +30,24 @@ namespace TrialsServerArchive.Controllers
             int pageNumber = page ?? 1;
 
             var trials = _context.Objects.OfType<TrialObject>()
+                .Where(t => !(t is ObjectInJournal))
                 .Include(t => t.ToolingLinks)
                 .ThenInclude(tt => tt.Tooling)
+                .Include(t => t.SampleType)
                 .AsEnumerable()
                 .Select(trial =>
                 {
                     // Вычисляем возраст на момент испытания
                     var testingAge = trial.TestingAge;
 
-                    // Находим следующий нормативный возраст
-                    var nextStandardAge = StandardAges.FirstOrDefault(a => a > (testingAge ?? 0));
+                // Находим следующий нормативный возраст
+                var nextStandardAge = StandardAges.FirstOrDefault(a => a > (testingAge ?? 0));
 
-                    // Вычисляем сколько дней осталось до следующего возраста
-                    trial.DaysToNextAge = nextStandardAge - (testingAge ?? 0);
-                    return trial;
-                })
-                .ToList();
+                // Вычисляем сколько дней осталось до следующего возраста
+                trial.DaysToNextAge = nextStandardAge - (testingAge ?? 0);
+                return trial;
+            })
+            .ToList();
 
             var groupedTrials = trials
                 .GroupBy(t => t.SeriesName)
@@ -59,43 +61,75 @@ namespace TrialsServerArchive.Controllers
         [HttpPost]
         public IActionResult MoveToJournal(string ids)
         {
-            foreach (var id in ids.Split(',').Select(int.Parse))
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                var trial = _context.Objects.OfType<TrialObject>()
-                    .Include(t => t.ToolingLinks)
-                    .First(t => t.Id == id);
-
-                var user = Task.Run(async () => await _userManager.GetUserAsync(User)).Result;
-                string userName = user?.GetInitials() ?? "System";
-
-                var journal = new ObjectInJournal
+                foreach (var id in ids.Split(',').Select(int.Parse))
                 {
-                    SeriesName = trial.SeriesName,
-                    Name = trial.Name,
-                    SampleCreationDate = trial.SampleCreationDate,
-                    SampleId = trial.SampleId,
-                    TestingDate = trial.TestingDate,
-                    ArchiveDate = DateTime.UtcNow,
-                    ArchivedBy = userName,
-                    CreatedBy = trial.CreatedBy,
-                    ToolingLinks = trial.ToolingLinks.Select(tt => new TrialTooling
+                    var trial = _context.Objects.OfType<TrialObject>()
+                        .Where(t => !(t is ObjectInJournal))
+                        .Include(t => t.FurnaceProgram)
+                        .Include(t => t.StoragePlace)
+                        .Include(t => t.SampleType)
+                        .FirstOrDefault(t => t.Id == id);
+
+                    var user = Task.Run(async () => await _userManager.GetUserAsync(User)).Result;
+                    string userName = user?.GetInitials() ?? "System";
+
+                    // Создание объекта ObjectInJournal из TrialObject
+                    var journal = new ObjectInJournal
                     {
-                        ToolingId = tt.ToolingId
-                    }).ToList()
-                };
+                        SampleTypeId = trial.SampleTypeId,
+                        SeriesName = trial.SeriesName,
+                        Name = trial.Name,
+                        SampleCreationDate = trial.SampleCreationDate,
+                        SampleId = trial.SampleId,
+                        TestingDate = trial.TestingDate,
+                        ArchiveDate = DateTime.UtcNow,
+                        ArchivedBy = userName,
+                        CreatedBy = trial.CreatedBy,
+                        ToolingLinks = trial.ToolingLinks, // Перенос существующих ссылок
+                        RecordDate = trial.RecordDate,
+                        Weight = trial.Weight,
+                        DimensionA = trial.DimensionA,
+                        DimensionB = trial.DimensionB,
+                        DimensionC = trial.DimensionC,
+                        Comment = trial.Comment,
+                        JournalType = trial.JournalType,
+                        Photos = trial.Photos, // Перенос существующих ссылок
+                        TestMode = trial.TestMode,
+                        WeightAfterTest = trial.WeightAfterTest,
+                        DimensionAAfterTest = trial.DimensionAAfterTest,
+                        DimensionBAfterTest = trial.DimensionBAfterTest,
+                        DimensionCAfterTest = trial.DimensionCAfterTest,
+                        DensityAfterTest = trial.DensityAfterTest,
+                        BreakingLoad = trial.BreakingLoad,
+                        WetCoefficient = trial.WetCoefficient,
+                        TestingTemperature = trial.TestingTemperature,
+                        TestingHumidity = trial.TestingHumidity,
+                        MU = trial.MU,
+                        MUStar = trial.MUStar,
+                        PP = trial.PP,
+                        FurnaceProgramId = trial.FurnaceProgramId,
+                        StoragePlaceId = trial.StoragePlaceId,
+                        TestedBy = trial.TestedBy,
+                        Density = trial.Density,
+                        DaysToNextAge = trial.DaysToNextAge
+                    };
 
-                _context.Objects.Remove(trial);
-                _context.Objects.Add(journal);
+                    _context.Objects.Remove(trial);
+                    _context.SaveChanges();
+                    _context.Objects.Add(journal);
+                    _context.SaveChanges();
+                }
+                transaction.Commit();
             }
-
-            _context.SaveChanges();
-            return RedirectToAction("Index", "Journal");
+            return RedirectToAction("Index", "Trials");
         }
 
         [HttpPost]
         public IActionResult RemoveFromSeries(int id)
         {
-            var trial = _context.Objects.OfType<TrialObject>().FirstOrDefault(t => t.Id == id);
+            var trial = _context.Objects.OfType<TrialObject>().Where(t => !(t is ObjectInJournal)).FirstOrDefault(t => t.Id == id);
             if (trial != null)
             {
                 trial.SeriesName = null;
@@ -108,6 +142,7 @@ namespace TrialsServerArchive.Controllers
         public IActionResult RemoveSeries(string seriesName)
         {
             var trials = _context.Objects.OfType<TrialObject>()
+                .Where(t => !(t is ObjectInJournal))
                 .Where(t => t.SeriesName == seriesName);
 
             foreach (var trial in trials)
@@ -122,7 +157,7 @@ namespace TrialsServerArchive.Controllers
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            var trial = _context.Objects.OfType<TrialObject>().FirstOrDefault(t => t.Id == id);
+            var trial = _context.Objects.OfType<TrialObject>().Where(t => !(t is ObjectInJournal)).FirstOrDefault(t => t.Id == id);
             if (trial != null)
             {
                 _context.Objects.Remove(trial);
@@ -134,6 +169,7 @@ namespace TrialsServerArchive.Controllers
         public IActionResult Details(int id)
         {
             var trial = _context.Objects.OfType<TrialObject>()
+                .Where(t => !(t is ObjectInJournal))
                 .Include(t => t.FurnaceProgram)
                 .Include(t => t.StoragePlace)
                 .FirstOrDefault(t => t.Id == id);
@@ -149,6 +185,7 @@ namespace TrialsServerArchive.Controllers
         public IActionResult Edit(int id)
         {
             var trial = _context.Objects.OfType<TrialObject>()
+                .Where(t => !(t is ObjectInJournal))
                 .Include(t => t.FurnaceProgram)
                 .Include(t => t.StoragePlace)
                 .FirstOrDefault(t => t.Id == id);
@@ -171,7 +208,7 @@ namespace TrialsServerArchive.Controllers
             {
                 try
                 {
-                    var existingTrial = _context.Objects.OfType<TrialObject>().FirstOrDefault(t => t.Id == id);
+                    var existingTrial = _context.Objects.OfType<TrialObject>().Where(t => !(t is ObjectInJournal)).FirstOrDefault(t => t.Id == id);
                     if (existingTrial == null) return NotFound();
 
                     // Обновляем свойства
@@ -211,7 +248,7 @@ namespace TrialsServerArchive.Controllers
 
         private bool TrialExists(int id)
         {
-            return _context.Objects.OfType<TrialObject>().Any(e => e.Id == id);
+            return _context.Objects.OfType<TrialObject>().Where(t => !(t is ObjectInJournal)).Any(e => e.Id == id);
         }
     }
 }
