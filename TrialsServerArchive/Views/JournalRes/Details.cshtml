@@ -1,0 +1,278 @@
+﻿@model TrialsServerArchive.Models.Objects.TrialObject
+@{
+    ViewData["Title"] = "Просмотр результатов испытаний";
+    var furnacePrograms = ViewBag.FurnacePrograms as IEnumerable<FurnaceProgram> ?? new List<FurnaceProgram>();
+    var storagePlaces = ViewBag.StoragePlaces as IEnumerable<StoragePlace> ?? new List<StoragePlace>();
+}
+
+<div class="container">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <!-- Общие данные -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Общие данные</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Наименование</label>
+                            <input class="form-control" value="@Model.Name" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Тип образца</label>
+                            <input class="form-control" value="@Model.SampleType?.Name" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Номер образца</label>
+                            <input class="form-control" value="@Model.SampleId" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Вес, г</label>
+                            <input class="form-control" value="@Model.Weight.ToString("F1")" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">а, мм</label>
+                            <input class="form-control" value="@Model.DimensionA.ToString("F1")" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">b, мм</label>
+                            <input class="form-control" value="@Model.DimensionB.ToString("F1")" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">h, мм</label>
+                            <input class="form-control" value="@Model.DimensionC?.ToString("F1")" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Плотность, кг/м³</label>
+                            <input class="form-control" value="@Model.Density.ToString("F0")" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Возраст, сут.</label>
+                            <input class="form-control" value="@(Model.TestingAge.HasValue ? Model.TestingAge.Value.ToString() : "-")" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Результаты испытаний -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Результаты испытаний</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="TestingDate" class="form-label">Дата испытаний *</label>
+                            <input asp-for="TestingDate" type="date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="TestMode" class="form-label">Режим испытаний</label>
+                            <select asp-for="TestMode" class="form-select">
+                                <option value="Стандарт">Стандарт</option>
+                                <option value="Ускоренный">Ускоренный</option>
+                                <option value="Контрольный">Контрольный</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="TestedBy" class="form-label">Испытания провел *</label>
+                            <input asp-for="TestedBy" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Геометрические параметры после испытаний</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="WeightAfterTest" class="form-label">Вес, г</label>
+                                            <input asp-for="WeightAfterTest" type="number" step="0.1" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Плотность, кг/м³</label>
+                                            <input asp-for="DensityAfterTest" type="number" step="1" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label asp-for="DimensionAAfterTest" class="form-label">а, мм</label>
+                                            <input asp-for="DimensionAAfterTest" type="number" step="0.1" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label asp-for="DimensionBAfterTest" class="form-label">b, мм</label>
+                                            <input asp-for="DimensionBAfterTest" type="number" step="0.1" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label asp-for="DimensionCAfterTest" class="form-label">h, мм</label>
+                                            <input asp-for="DimensionCAfterTest" type="number" step="0.1" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Потери плотности, кг/м³</label>
+                                    <input class="form-control" value="@Model.DensityLoss?.ToString("F0")" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Прочностные характеристики</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="BreakingLoad" class="form-label">Нагрузка, кН</label>
+                                            <input asp-for="BreakingLoad" type="number" step="0.01" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="WetCoefficient" class="form-label">МК</label>
+                                            <input asp-for="WetCoefficient" type="number" step="0.01" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Прочность с учетом МК, МПа</label>
+                                    <input class="form-control" value="@Model.StrengthWithCoefficient?.ToString("F2")" readonly>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="TestingTemperature" class="form-label">Температура, °C</label>
+                                            <input asp-for="TestingTemperature" type="number" step="0.1" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="TestingHumidity" class="form-label">Влажность, %</label>
+                                            <input asp-for="TestingHumidity" type="number" step="0.1" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="FurnaceProgramId" class="form-label">Печь/программа</label>
+                            <select asp-for="FurnaceProgramId" class="form-select">
+                                <option value="">-- Выберите --</option>
+                                @foreach (var program in furnacePrograms)
+                                {
+                                    <option value="@program.Id">@program.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="StoragePlaceId" class="form-label">Место хранения</label>
+                            <select asp-for="StoragePlaceId" class="form-select">
+                                <option value="">-- Выберите --</option>
+                                @foreach (var place in storagePlaces)
+                                {
+                                    <option value="@place.Id">@place.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Документация</label>
+                            <div class="input-group">
+                                <input asp-for="MU" class="form-control" placeholder="МУ">
+                                <input asp-for="MUStar" class="form-control" placeholder="МУ*">
+                                <input asp-for="PP" class="form-control" placeholder="ПП">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Comment" class="form-label">Примечания</label>
+                    <textarea asp-for="Comment" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Назад к журналу
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Сохранить изменения
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Автоматический расчет производных значений
+        $('input[name="BreakingLoad"], input[name="WetCoefficient"]').on('input', function () {
+            const load = parseFloat($('input[name="BreakingLoad"]').val()) || 0;
+            const coeff = parseFloat($('input[name="WetCoefficient"]').val()) || 0;
+            const strength = (load * coeff).toFixed(2);
+            $('input[name="StrengthWithCoefficient"]').val(isNaN(strength) ? '' : strength);
+        });
+    </script>
+}

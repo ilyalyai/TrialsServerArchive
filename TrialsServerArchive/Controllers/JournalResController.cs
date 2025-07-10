@@ -7,11 +7,11 @@ using X.PagedList.Extensions;
 
 namespace TrialsServerArchive.Controllers
 {
-    public class JournalResController : Controller
+    public class JournalResController : MainControllerService
     {
-        private readonly ApplicationDbContext _context;
-
-        public JournalResController(ApplicationDbContext context) => _context = context;
+        public JournalResController(IWebHostEnvironment env,
+                           ILogger<TrialsController> logger,
+                           ApplicationDbContext context) : base(env, logger, context) { }
 
         public IActionResult Index(int? page)
         {
@@ -25,17 +25,6 @@ namespace TrialsServerArchive.Controllers
                 .ToPagedList(pageNumber, pageSize);
 
             return View(entries);
-        }
-
-        public IActionResult Details(int id)
-        {
-            var entry = _context.Objects.OfType<ObjectInJournal>()
-                .Include(j => j.ToolingLinks)
-                .ThenInclude(tt => tt.Tooling)
-                .FirstOrDefault(j => j.Id == id);
-            
-            if (entry == null) return NotFound();
-            return PartialView("_JournalDetails", entry);
         }
     }
 }

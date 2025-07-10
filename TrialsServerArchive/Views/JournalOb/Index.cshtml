@@ -1,119 +1,148 @@
-﻿@model X.PagedList.IPagedList<ObjectInJournal>
+﻿@model IPagedList<TrialsServerArchive.Models.Objects.ObjectInJournal>
+@using X.PagedList.Mvc.Core;
+@using TrialsServerArchive.Models.Objects;
+@inject SignInManager<ApplicationUser> SignInManager
 
 @{
     ViewData["Title"] = "Журнал ОБ";
 }
 
+
 <style>
+    .trial-table {
+        font-size: 0.85rem;
+    }
+
+    .highlight-row {
+        border: 2px solid #ff0000 !important;
+        animation: pulse 2s infinite;
+    }
+
+    .age-cell {
+        text-align: center;
+        font-weight: bold;
+        min-width: 30px;
+        padding: 3px !important;
+    }
+
     .group-header {
+        background-color: #e9ecef;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .actions-cell {
+        width: 120px;
+    }
+
+    .sub-header {
         background-color: #f8f9fa;
         font-weight: bold;
-        border-top: 2px solid #dee2e6;
-        border-bottom: 1px solid #dee2e6;
     }
 
-    .group-row {
-        border-bottom: 1px solid #dee2e6;
+    .fixed-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
 
-    .last-in-group {
-        border-bottom: 2px solid #dee2e6;
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255,0,0,0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(255,0,0,0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(255,0,0,0);
+        }
     }
 </style>
 
-<h1>Журнал ОБ</h1>
-
-<div class="card">
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Название</th>
-                    <th>Серия</th>
-                    <th>Срок до архивации (дней)</th>
-                    <th style="width: 100px;">Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                @{
-                    var groups = Model
-                    .OrderBy(j => j.SeriesName)
-                    .GroupBy(j => j.SeriesName);
-
-                    foreach (var group in groups)
-                    {
-                        <tr class="group-header">
-                            <td colspan="3">
-                                Серия: @(string.IsNullOrEmpty(group.Key) ? "Без серии" : group.Key)
-                            </td>
-                            <td></td>
+<div class="container">
+    <h1>Журнал РЕЗ</h1>
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover trial-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th rowspan="3">№ записи</th>
+                            <th rowspan="3">Дата изготовления образца</th>
+                            <th rowspan="3">Маркировка образца</th>
+                            <th rowspan="3">Дата испытания</th>
+                            <th rowspan="3">Режим</th>
+                            <!-- Общие данные -->
+                            <th colspan="6" class="group-header">Характеристика образца</th>
+                            <!-- Результаты испытаний -->
+                            <th colspan="3" class="group-header">Результаты испытаний</th>
+                            <th rowspan="3">Примечания</th>
+                            <th rowspan="3">Условия испытаний (температура (°С) и относительная влажность (%) воздуха)</th>
+                            <th rowspan="3">Подпись лица, испытавшего образцы</th>
+                            <th rowspan="3">Детали</th>
                         </tr>
-
-                        var lastIndex = group.Count() - 1;
-                        var index = 0;
-
-                        foreach (var item in group.OrderBy(j => j.Name))
+                        <tr>
+                            <!-- Общие данные -->
+                            <th rowspan="2">Масса, гр</th>
+                            <th rowspan="2">Плотность, кг/м3</th>
+                            <th rowspan="2">Средняя плотность, кг/м3</th>
+                            <th colspan="3">Размер образца, мм</th>
+                            <th rowspan="2">Разрушающая нагрузка на сжатие, кН</th>
+                            <th rowspan="2">Прочность, с учетом м.к., МПа</th>
+                            <th rowspan="2">Средняя прочность, МПа</th>
+                        </tr>
+                        <tr>
+                            <th>а, мм</th>
+                            <th>b, мм</th>
+                            <th>h, мм</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var trial in Model)
                         {
-                            <tr class="group-row @(index == lastIndex ? "last-in-group" : "")">
-                                <td>@item.Name</td>
-                                <td>@item.SeriesName</td>
-                                <td>@item.GetAge(item.ArchiveDate)</td>
-                                <td>
-                                    <button class="btn btn-sm btn-info details-btn"
-                                            data-id="@item.Id">
-                                        <i class="bi bi-info-circle"></i>
-                                    </button>
+                            <tr>
+                                <td>@trial.Id</td>
+                                <td>@trial.SampleCreationDate</td>
+                                <td>@trial.Name</td>
+                                <td>@trial.TestingDate</td>
+                                <td>@trial.TestMode</td>
+                                <td>@trial.Weight</td>
+                                <td>@trial.Density</td>
+                                <td>@trial.DensityAfterTest</td>
+                                <td>@trial.DimensionA.ToString("F1")</td>
+                                <td>@trial.DimensionB.ToString("F1")</td>
+                                <td>@trial.DimensionC?.ToString("F1")</td>
+
+                                <td>@trial.BreakingLoad</td>
+                                <td>@trial.StrengthWithCoefficient</td>
+                                <td>@trial.StrengthWithCoefficient</td>
+                                <td>@trial.Comment</td>
+                                <td>@trial.TestingTemperature °С @trial.TestingHumidity %</td>
+                                <td>""</td>
+                                <td class="actions-cell align-middle">
+                                    <a asp-action="Details" asp-route-id="@trial.Id" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
                                 </td>
                             </tr>
-                            index++;
                         }
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
+                    </tbody>
+                </table>
 
-<div class="d-flex justify-content-center">
-    @Html.PagedListPager(
-            Model,
-            page => Url.Action("Index", new { page }),
-            new PagedListRenderOptions
-    {
-        LiElementClasses = new[] { "page-item" },
-        PageClasses = new[] { "page-link" },
-        UlElementClasses = new[] { "pagination" },
-        MaximumPageNumbersToDisplay = 5
-    }
-            )
-</div>
-
-<!-- Модальное окно свойств -->
-<div class="modal fade" id="detailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Свойства образца</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="detailsContent">
-                <!-- Контент будет загружен через AJAX -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <!-- Пагинация -->
+                <div class="d-flex justify-content-center">
+                    @Html.PagedListPager(Model, page => Url.Action("Index", new { page }),
+                             new PagedListRenderOptions
+                    {
+                        LiElementClasses = new[] { "page-item" },
+                        PageClasses = new[] { "page-link" },
+                        DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+                        DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded
+                    })
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        $(function() {
-            $('.details-btn').click(function() {
-                const id = $(this).data('id');
-                $('#detailsContent').load('@Url.Action("Details", "Journal")?id=' + id);
-                $('#detailsModal').modal('show');
-            });
-        });
-    </script>
-}
