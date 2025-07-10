@@ -59,16 +59,46 @@
             box-shadow: 0 0 0 0 rgba(255,0,0,0);
         }
     }
+
+    .selection-header {
+        background-color: #e0f7fa;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        display: none;
+    }
 </style>
 
 <div class="container">
-    <h1>Журнал РЕЗ</h1>
+    <h1>Журнал ОБ</h1>
+
+    <!-- Панель выбора записей -->
+    <div class="selection-header" id="selectionPanel">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span id="selectedCount">0</span> записей выбрано
+            </div>
+            <div>
+                <button class="btn btn-success" id="generateProtocolBtn">
+                    <i class="bi bi-file-earmark-word"></i> Сформировать протокол для выбранных
+                </button>
+                <button class="btn btn-outline-secondary" id="clearSelectionBtn">
+                    <i class="bi bi-x-circle"></i> Сбросить
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover trial-table">
                     <thead class="table-light">
                         <tr>
+                            <!-- Добавляем колонку для чекбоксов -->
+                            <th rowspan="3" style="width: 40px;">
+                                <input type="checkbox" id="selectAllHeader">
+                            </th>
                             <th rowspan="3">№ записи</th>
                             <th rowspan="3">Дата изготовления образца</th>
                             <th rowspan="3">Маркировка образца</th>
@@ -100,33 +130,58 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var trial in Model)
+                        @foreach (var seriesGroup in Model.GroupBy(t => t.SeriesName).OrderBy(g => g.Key))
                         {
-                            <tr>
-                                <td>@trial.Id</td>
-                                <td>@trial.SampleCreationDate</td>
-                                <td>@trial.Name</td>
-                                <td>@trial.TestingDate</td>
-                                <td>@trial.TestMode</td>
-                                <td>@trial.Weight</td>
-                                <td>@trial.Density</td>
-                                <td>@trial.DensityAfterTest</td>
-                                <td>@trial.DimensionA.ToString("F1")</td>
-                                <td>@trial.DimensionB.ToString("F1")</td>
-                                <td>@trial.DimensionC?.ToString("F1")</td>
-
-                                <td>@trial.BreakingLoad</td>
-                                <td>@trial.StrengthWithCoefficient</td>
-                                <td>@trial.StrengthWithCoefficient</td>
-                                <td>@trial.Comment</td>
-                                <td>@trial.TestingTemperature °С @trial.TestingHumidity %</td>
-                                <td>""</td>
-                                <td class="actions-cell align-middle">
-                                    <a asp-action="Details" asp-route-id="@trial.Id" class="btn btn-sm btn-primary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
+                            <tr class="group-header">
+                                <td colspan="18">
+                                    <div class="d-flex align-items-center">
+                                        <div class="form-check me-2">
+                                            <input type="checkbox" class="form-check-input select-series"
+                                                   data-series="@seriesGroup.Key">
+                                        </div>
+                                        <strong>Серия: @(seriesGroup.Key ?? "Без серии")</strong>
+                                    </div>
                                 </td>
                             </tr>
+                            @foreach (var trial in seriesGroup)
+                            {
+                                <tr>
+                                    <!-- Чекбокс для выбора записи -->
+                                    <td>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input trial-select"
+                                                   value="@trial.Id" data-series="@trial.SeriesName">
+                                        </div>
+                                    </td>
+
+                                    <td>@trial.Id</td>
+                                    <td>@trial.SampleCreationDate</td>
+                                    <td>@trial.Name</td>
+                                    <td>@trial.TestingDate</td>
+                                    <td>@trial.TestMode</td>
+                                    <td>@trial.Weight</td>
+                                    <td>@trial.Density</td>
+                                    <td>@trial.DensityAfterTest</td>
+                                    <td>@trial.DimensionA.ToString("F1")</td>
+                                    <td>@trial.DimensionB.ToString("F1")</td>
+                                    <td>@trial.DimensionC?.ToString("F1")</td>
+
+                                    <td>@trial.BreakingLoad</td>
+                                    <td>@trial.StrengthWithCoefficient</td>
+                                    <td>@trial.StrengthWithCoefficient</td>
+                                    <td>@trial.Comment</td>
+                                    <td>@trial.TestingTemperature °С @trial.TestingHumidity %</td>
+                                    <td>""</td>
+                                    <td class="actions-cell align-middle">
+                                        <a asp-action="Details" asp-route-id="@trial.Id" class="btn btn-sm btn-primary" title="Детали">
+                                            <i class="bi-info-circle"></i>
+                                        </a>
+                                        <a asp-action="GenerateProtocol" asp-route-id="@trial.Id" class="btn btn-sm btn-success" title="Подготовить протокол">
+                                            <i class="bi bi-file-earmark-word"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
                         }
                     </tbody>
                 </table>
@@ -146,3 +201,91 @@
         </div>
     </div>
 </div>
+
+<!-- Форма для отправки выбранных записей -->
+<form id="bulkProtocolForm" asp-action="GenerateBulkProtocol" method="post" style="display: none;">
+    <input type="hidden" name="ids" id="selectedIds" />
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Элементы интерфейса
+            const selectionPanel = $('#selectionPanel');
+            const selectedCount = $('#selectedCount');
+            const generateBtn = $('#generateProtocolBtn');
+            const clearBtn = $('#clearSelectionBtn');
+            const bulkForm = $('#bulkProtocolForm');
+            const selectedIdsInput = $('#selectedIds');
+
+            // Обработчики чекбоксов
+            $('.trial-select').change(function() {
+                updateSelectionState();
+            });
+
+            // Выбор всей серии
+            $('.select-series').change(function() {
+                const series = $(this).data('series');
+                const isChecked = $(this).prop('checked');
+
+                $(`.trial-select[data-series="${series}"]`).prop('checked', isChecked);
+                updateSelectionState();
+            });
+
+            // Выбор всех записей
+            $('#selectAllHeader').change(function() {
+                const isChecked = $(this).prop('checked');
+                $('.trial-select').prop('checked', isChecked);
+                $('.select-series').prop('checked', isChecked);
+                updateSelectionState();
+            });
+
+            // Кнопка сброса выбора
+            clearBtn.click(function() {
+                $('.trial-select, .select-series, #selectAllHeader').prop('checked', false);
+                updateSelectionState();
+            });
+
+            // Кнопка генерации протокола
+            generateBtn.click(function() {
+                const selectedIds = $('.trial-select:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedIds.length > 0) {
+                    selectedIdsInput.val(selectedIds.join(','));
+                    bulkForm.submit();
+                }
+            });
+
+            // Обновление состояния выбора
+            function updateSelectionState() {
+                const selectedCountVal = $('.trial-select:checked').length;
+
+                if (selectedCountVal > 0) {
+                    selectedCount.text(selectedCountVal);
+                    selectionPanel.show();
+                } else {
+                    selectionPanel.hide();
+                }
+
+                // Обновляем состояние чекбоксов серий
+                $('.select-series').each(function() {
+                    const series = $(this).data('series');
+                    const allInSeries = $(`.trial-select[data-series="${series}"]`);
+                    const selectedInSeries = $(`.trial-select[data-series="${series}"]:checked`);
+
+                    $(this).prop('checked', selectedInSeries.length > 0 &&
+                                          selectedInSeries.length === allInSeries.length);
+                });
+
+                // Обновляем состояние общего выбора
+                const allCheckboxes = $('.trial-select');
+                $('#selectAllHeader').prop('checked',
+                    allCheckboxes.length > 0 &&
+                    $('.trial-select:checked').length === allCheckboxes.length
+                );
+            }
+        });
+    </script>
+}
