@@ -12,7 +12,7 @@ using TrialsServerArchive.Data;
 namespace TrialsServerArchive.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250702122600_InitialCreate")]
+    [Migration("20250720221013_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -73,6 +73,10 @@ namespace TrialsServerArchive.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");

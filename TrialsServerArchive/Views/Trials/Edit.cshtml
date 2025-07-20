@@ -1,8 +1,10 @@
-﻿@model TrialsServerArchive.Models.Objects.TrialObject
+﻿@inject SignInManager<ApplicationUser> SignInManager
+@model TrialsServerArchive.Models.Objects.TrialObject
 @{
     ViewData["Title"] = "Редактирование результатов испытаний";
     var furnacePrograms = ViewBag.FurnacePrograms as IEnumerable<FurnaceProgram> ?? new List<FurnaceProgram>();
     var storagePlaces = ViewBag.StoragePlaces as IEnumerable<StoragePlace> ?? new List<StoragePlace>();
+    var currentUser = await SignInManager.UserManager.GetUserAsync(User);
 }
 
 <div class="container">
@@ -70,7 +72,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label">Плотность, кг/м³</label>
-                            <input class="form-control" value="@Model.Density.ToString("F0")" readonly>
+                            <input asp-for="Density" id="initialDensity" type="number" step="1" class="form-control">
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -109,7 +111,10 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label asp-for="TestedBy" class="form-label">Испытания провел *</label>
-                            <input asp-for="TestedBy" class="form-control" required>
+                            <div class="input-group">
+                                <input asp-for="TestedBy" class="form-control" id="verifiedByInput" required>
+                                <button class="btn btn-outline-secondary" type="button" id="verifiedByMeBtn">Я</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -131,7 +136,7 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Плотность, кг/м³</label>
-                                            <input asp-for="DensityAfterTest" type="number" step="1" class="form-control">
+                                            <input asp-for="DensityAfterTest" id="initialDensity" type="number" step="1" class="form-control">
                                         </div>
                                     </div>
                                 </div>
@@ -159,7 +164,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Потери плотности, кг/м³</label>
-                                    <input class="form-control" value="@Model.DensityLoss?.ToString("F0")" readonly>
+                                    <input asp-for="DensityLoss" id="densityLossInput" type="number" step="1" class="form-control" readonly>
                                 </div>
                             </div>
                         </div>
@@ -188,7 +193,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Прочность с учетом МК, МПа</label>
-                                    <input class="form-control" value="@Model.StrengthWithCoefficient?.ToString("F2")" readonly>
+                                    <input class="form-control" value="@Model.StrengthWithCoefficient?.ToString("F2")">
                                 </div>
 
                                 <div class="row">
@@ -273,6 +278,33 @@
             const coeff = parseFloat($('input[name="WetCoefficient"]').val()) || 0;
             const strength = (load * coeff).toFixed(2);
             $('input[name="StrengthWithCoefficient"]').val(isNaN(strength) ? '' : strength);
+        });
+
+        const currentUserName = @Json.Serialize(currentUser?.FullName ?? "System");
+
+        $('#verifiedByMeBtn').click(function () {
+            $('#verifiedByInput').val(currentUserName);
+        });
+
+        // Функция обновления потерь плотности
+        function updateDensityLoss() {
+            const initial = parseFloat($('#initialDensity').val()) || 0;
+            const afterTest = parseFloat($('input[name="DensityAfterTest"]').val()) || 0;
+            const loss = initial - afterTest;
+
+            if (!isNaN(loss)) {
+                $('#densityLossInput').val(Math.round(loss));
+            } else {
+                $('#densityLossInput').val('');
+            }
+        }
+
+        // Инициализация и обработчики
+        $(function() {
+            updateDensityLoss(); // Обновить при загрузке
+
+            // Обновлять при изменении плотности после испытаний
+            $('input[name="DensityAfterTest"]').on('input', updateDensityLoss);
         });
     </script>
 }

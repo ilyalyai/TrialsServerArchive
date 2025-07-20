@@ -4,6 +4,7 @@ using TrialsServerArchive.Models.Objects;
 using Microsoft.EntityFrameworkCore;
 using X.PagedList;
 using X.PagedList.Extensions;
+using Microsoft.AspNetCore.Identity;
 
 namespace TrialsServerArchive.Controllers
 {
@@ -11,7 +12,8 @@ namespace TrialsServerArchive.Controllers
     {
         public JournalObController(IWebHostEnvironment env,
                    ILogger<TrialsController> logger,
-                   ApplicationDbContext context) : base(env, logger, context) { }
+                   ApplicationDbContext context, 
+                           UserManager<ApplicationUser> userManager) : base(env, logger, context, userManager) { }
 
         public IActionResult Index(int? page)
         {
@@ -25,6 +27,12 @@ namespace TrialsServerArchive.Controllers
                 .ToPagedList(pageNumber, pageSize);
 
             return View(entries);
+        }
+
+                [HttpPost]
+        public IActionResult GenerateProtocol([FromForm] string ids)
+        {
+            return GenerateBulkProtocol(ids);
         }
     }
 }

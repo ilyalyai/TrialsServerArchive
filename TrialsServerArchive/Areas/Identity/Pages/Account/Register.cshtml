@@ -15,6 +15,13 @@
                 <span asp-validation-for="Input.FullName" class="text-danger"></span>
             </div>
 
+            <!-- Поле должность -->
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Position" class="form-control"/>
+                <label asp-for="Input.Position"></label>
+                <span asp-validation-for="Input.Position" class="text-danger"></span>
+            </div>
+
             <!-- Поле Логин -->
             <div class="form-floating mb-3">
                 <input asp-for="Input.UserName" class="form-control" autocomplete="username" />

@@ -51,9 +51,6 @@ namespace TrialsServerArchive.Models.Objects
         // Исполнители
         public string TestedBy { get; set; } // Испытания провел
 
-        // Примечания
-        public string Comment { get; set; }
-
         // Связь с оснасткой
         public virtual ICollection<TrialTooling> ToolingLinks { get; set; } = [];
 

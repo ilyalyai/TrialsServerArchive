@@ -8,6 +8,7 @@ using TrialsServerArchive.Data;
 using Microsoft.EntityFrameworkCore;
 using TrialsServerArchive.Models.Objects;
 using DocumentFormat.OpenXml;
+using Microsoft.AspNetCore.Identity;
 
 namespace TrialsServerArchive.Controllers
 {
@@ -16,14 +17,17 @@ namespace TrialsServerArchive.Controllers
         protected readonly ApplicationDbContext _context;
         protected readonly IWebHostEnvironment _env;
         protected readonly ILogger<TrialsController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public MainControllerService(IWebHostEnvironment env,
                            ILogger<TrialsController> logger,
-                           ApplicationDbContext context)
+                           ApplicationDbContext context, 
+                           UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _env = env;
             _logger = logger;
+            _userManager = userManager;
         }
 
         public IActionResult Details(int id)
@@ -84,29 +88,54 @@ namespace TrialsServerArchive.Controllers
                     {
                         MainDocumentPart mainPart = doc.MainDocumentPart;
                         if (mainPart == null) return BadRequest("Неверный формат шаблона");
-
                         Body body = mainPart.Document.Body;
 
                         // Заменяем общие плейсхолдеры
                         ReplacePlaceholder(body, "[CurrentDate]", DateTime.Now.ToString("dd.MM.yyyy"));
-                        ReplacePlaceholder(body, "[TotalCount]", trials.Count.ToString());
+                        var user = Task.Run(async () => await _userManager.GetUserAsync(User)).Result;
+                        if (user != null && !string.IsNullOrEmpty(user.FullName))
+                        {
+                            ReplacePlaceholder(body, "[FIO]", user.GetInitials());
+                            ReplacePlaceholder(body, "[Position]", user.Position);
+                        }
 
                         // Находим таблицу для заполнения данными
-                        var table = body.Descendants<Table>().FirstOrDefault();
-                        if (table == null) return BadRequest("В шаблоне не найдена таблица");
+                        var tables = body.Descendants<Table>().ToArray();
+                        var toolingTable = tables.FirstOrDefault();
+                        if (toolingTable == null) return BadRequest("В шаблоне не найдена таблица для оборудования!");
+
+                        var objectTable = tables.Count() > 1 ? tables[1] : null;
+                        if (objectTable == null) return BadRequest("В шаблоне не найдена таблица для результатов испытаний!");
+
+                        int counter = 0;
+                        foreach (var tool in trials.SelectMany(t => t.Toolings).Distinct())
+                        {
+                            var newRow = new TableRow();
+                            // Добавляем ячейки с данными
+                            newRow.AppendChild(CreateTableCell((counter++).ToString()));
+                            newRow.AppendChild(CreateTableCell(tool.Name));
+                            newRow.AppendChild(CreateTableCell(tool.Id.ToString()));
+                            newRow.AppendChild(CreateTableCell(tool.Description));
+                            newRow.AppendChild(CreateTableCell(tool.ExpiryDate.ToString()));
+                            toolingTable.AppendChild(newRow);
+                        }
 
                         // Добавляем строки для каждого испытания
                         foreach (var trial in trials)
                         {
                             var newRow = new TableRow();
-
                             // Добавляем ячейки с данными
                             newRow.AppendChild(CreateTableCell(trial.Id.ToString()));
-                            newRow.AppendChild(CreateTableCell(trial.SampleCreationDate.ToString("dd.MM.yyyy")));
-                            newRow.AppendChild(CreateTableCell(trial.Name));
-                            newRow.AppendChild(CreateTableCell(trial.TestingDate.ToString("dd.MM.yyyy")));
-                            newRow.AppendChild(CreateTableCell(trial.TestMode));
-                            table.AppendChild(newRow);
+                            newRow.AppendChild(CreateTableCell(trial.Weight.ToString()));
+                            newRow.AppendChild(CreateTableCell(trial.Density.ToString()));
+                            newRow.AppendChild(CreateTableCell(trial.DimensionA.ToString()));
+                            newRow.AppendChild(CreateTableCell(trial.DimensionB.ToString()));
+                            newRow.AppendChild(CreateTableCell(trial.DimensionC == null ? "-" : trial.DimensionC.ToString()));
+                            newRow.AppendChild(CreateTableCell(trial.BreakingLoad.ToString()));
+                            newRow.AppendChild(CreateTableCell("Не понял что писать"));
+                            newRow.AppendChild(CreateTableCell("Не понял что писать"));
+                            newRow.AppendChild(CreateTableCell("Не понял что писать"));
+                            objectTable.AppendChild(newRow);
                         }
 
                         doc.Save();

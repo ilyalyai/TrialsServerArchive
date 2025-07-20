@@ -45,6 +45,10 @@ namespace TrialsServerArchive.Areas.Identity.Pages.Account
             [DataType(DataType.Password)]
             [Compare("Password", ErrorMessage = "Пароли не совпадают")]
             public required string ConfirmPassword { get; set; }
+
+            [Required(ErrorMessage = "Должность обязательна")]
+            [Display(Name = "Должность")]
+            public required string Position { get; set; }
         }
 
         public void OnGet(string returnUrl = null)
@@ -61,7 +65,8 @@ namespace TrialsServerArchive.Areas.Identity.Pages.Account
                 var user = new ApplicationUser
                 {
                     UserName = Input.UserName,
-                    FullName = Input.FullName
+                    FullName = Input.FullName,
+                    Position = Input.Position
                 };
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
