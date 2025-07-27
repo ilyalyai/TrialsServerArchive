@@ -259,6 +259,34 @@
             </div>
         </div>
 
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Фотографии образца</h5>
+            </div>
+            <div class="card-body">
+                <div id="photosContainer" class="row">
+                    @await Html.PartialAsync("/Views/Shared/_SamplePhotos.cshtml", Model.Photos)
+                </div>
+
+                <!-- Форма загрузки фото -->
+                <div class="mt-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <label class="form-label">Загрузить фото:</label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="file" class="form-control" id="photoFileInput" accept="image/*" required />
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-primary" id="uploadButton">
+                                <i class="bi bi-upload"></i> Загрузить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="d-flex justify-content-between">
             <a asp-action="Index" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Назад к журналу
@@ -305,6 +333,64 @@
 
             // Обновлять при изменении плотности после испытаний
             $('input[name="DensityAfterTest"]').on('input', updateDensityLoss);
+        });
+
+        // Функция обновления фото
+        function refreshPhotos() {
+            $.get('@Url.Action("GetPhotos", "Samples")', { sampleId: "@Model.Id" }, function(data) {
+                    $('#photosContainer').html(data);
+                });
+        }
+
+        // Инициализируем фото сразу при открытии
+        refreshPhotos();
+
+        // Обработчик загрузки фото
+        $('#uploadButton').off('click').on('click', function() {
+            const fileInput = document.getElementById('photoFileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Пожалуйста, выберите файл');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('sampleId', "@Model.Id");
+
+            const $btn = $(this);
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Загрузка...');
+
+            $.ajax({
+                url: '@Url.Action("UploadPhoto", "Samples")',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function() {
+                    refreshPhotos();
+                    fileInput.value = '';
+                    alert('Фото успешно загружено!');
+                },
+                error: function(xhr) {
+                    alert('Ошибка загрузки: ' + xhr.responseText);
+                },
+                complete: function() {
+                    $btn.html('<i class="bi bi-upload"></i> Загрузить').prop('disabled', false);
+                }
+            });
+        });
+
+        // Обработчик удаления фото - ПЕРЕМЕЩЕН ВНУТРЬ ФУНКЦИИ
+        $(document).on('click', '.delete-photo', function() {
+            const photoId = $(this).data('id');
+            if (confirm('Вы уверены, что хотите удалить это фото?')) {
+                $.post('@Url.Action("DeletePhoto", "Samples")', { id: photoId }, function() {
+                    // Обновляем фото после удаления
+                    refreshPhotos();
+                });
+            }
         });
     </script>
 }

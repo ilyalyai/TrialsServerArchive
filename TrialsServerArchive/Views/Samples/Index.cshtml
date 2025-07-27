@@ -345,40 +345,104 @@
             $('#trialIds').val(ids.join(','));
             $('#trialModal').modal('show');
         });
-    // Обработчики для кнопок действий
-            $('.ungroup-one-btn').click(function() {
-                const id = $(this).data('id');
-                if (confirm('Удалить образец из серии?')) {
-                    $.post('@Url.Action("RemoveFromSeries", "Samples")', { id: id }, function() {
-                        location.reload();
-                    });
-                }
-            });
-
-            $('.ungroup-btn').click(function() {
-                const series = $(this).data('series');
-                if (confirm(`Удалить все образцы из серии "${series}"?`)) {
-                    $.post('@Url.Action("RemoveSeries", "Samples")', { seriesName: series }, function() {
-                        location.reload();
-                    });
-                }
-            });
-
-            $('.delete-btn').click(function() {
-                const id = $(this).data('id');
-                if (confirm('Удалить образец полностью?')) {
-                    $.post('@Url.Action("Delete", "Samples")', { id: id }, function() {
-                        location.reload();
-                    });
-                }
-            });
-
-            $('.details-btn').click(function() {
-                const id = $(this).data('id');
-                $('#detailsContent').load('@Url.Action("Details", "Samples")?id=' + id);
-                $('#detailsModal').modal('show');
-            });
+        // Обработчики для кнопок действий
+        $('.ungroup-one-btn').click(function() {
+            const id = $(this).data('id');
+            if (confirm('Удалить образец из серии?')) {
+                $.post('@Url.Action("RemoveFromSeries", "Samples")', { id: id }, function() {
+                    location.reload();
+                });
+            }
         });
+
+        $('.ungroup-btn').click(function() {
+            const series = $(this).data('series');
+            if (confirm(`Удалить все образцы из серии "${series}"?`)) {
+                $.post('@Url.Action("RemoveSeries", "Samples")', { seriesName: series }, function() {
+                    location.reload();
+                });
+            }
+        });
+
+        $('.delete-btn').click(function() {
+            const id = $(this).data('id');
+            if (confirm('Удалить образец полностью?')) {
+                $.post('@Url.Action("Delete", "Samples")', { id: id }, function() {
+                    location.reload();
+                });
+            }
+        });
+
+        $('.details-btn').click(function() {
+            const id = $(this).data('id');
+            $('#detailsContent').load('@Url.Action("Details", "Samples")?id=' + id, function() {
+                // Инициализация скриптов после загрузки контента
+                initSampleDetails(id);
+            });
+            $('#detailsModal').modal('show');
+        });
+
+        // Функция инициализации для модального окна деталей
+        function initSampleDetails(sampleId) {
+            // Функция обновления фото
+            function refreshPhotos() {
+                $.get('@Url.Action("GetPhotos", "Samples")', { sampleId: sampleId }, function(data) {
+                    $('#photosContainer').html(data);
+                });
+            }
+
+            // Инициализируем фото сразу при открытии
+            refreshPhotos();
+
+            // Обработчик загрузки фото
+            $('#uploadButton').off('click').on('click', function() {
+                const fileInput = document.getElementById('photoFileInput');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    alert('Пожалуйста, выберите файл');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('sampleId', sampleId);
+
+                const $btn = $(this);
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Загрузка...');
+
+                $.ajax({
+                    url: '@Url.Action("UploadPhoto", "Samples")',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function() {
+                        refreshPhotos();
+                        fileInput.value = '';
+                        alert('Фото успешно загружено!');
+                    },
+                    error: function(xhr) {
+                        alert('Ошибка загрузки: ' + xhr.responseText);
+                    },
+                    complete: function() {
+                        $btn.html('<i class="bi bi-upload"></i> Загрузить').prop('disabled', false);
+                    }
+                });
+            });
+
+            // Обработчик удаления фото - ПЕРЕМЕЩЕН ВНУТРЬ ФУНКЦИИ
+            $(document).on('click', '.delete-photo', function() {
+                const photoId = $(this).data('id');
+                if (confirm('Вы уверены, что хотите удалить это фото?')) {
+                    $.post('@Url.Action("DeletePhoto", "Samples")', { id: photoId }, function() {
+                        // Обновляем фото после удаления
+                        refreshPhotos();
+                    });
+                }
+            });
+        }
+    });
 
     $(document).ready(function() {
         // Динамическое управление полями размеров

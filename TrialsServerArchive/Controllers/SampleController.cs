@@ -99,7 +99,7 @@ namespace TrialsServerArchive.Controllers
         {
             var idArray = ids.Split(',').Select(int.Parse).ToArray();
             var samples = _context.Objects.OfType<Sample>().Where(s => idArray.Contains(s.Id));
-            foreach (var sample in samples) 
+            foreach (var sample in samples)
             {
                 sample.SeriesName = seriesName;
             }
@@ -117,6 +117,7 @@ namespace TrialsServerArchive.Controllers
                 var sample = _context.Objects.OfType<Sample>().First(s => s.Id == id);
                 var trial = new TrialObject
                 {
+                    Id = id,
                     // Копируем все свойства из исходного образца
                     SeriesName = sample.SeriesName,
                     Name = sample.Name,
@@ -135,11 +136,10 @@ namespace TrialsServerArchive.Controllers
                     DimensionB = sample.DimensionB,
                     DimensionC = sample.DimensionC,
                     Weight = sample.Weight,
-
+                    Density = sample.Density,
                     // Дополнительные свойства
                     JournalType = sample.JournalType,
                     Comment = sample.Comment
-
                 };
 
                 // Добавляем выбранные инструменты через промежуточную сущность
@@ -243,123 +243,99 @@ namespace TrialsServerArchive.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(Sample model)
+        public async Task<IActionResult> Edit([FromForm] BaseObject model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                var existingSample = _context.Objects
-                    .Include(s => s.Photos)
-                    .FirstOrDefault(s => s.Id == model.Id);
+                // Найти существующий объект
+                var existing = await _context.Objects
+                    .Include(o => o.Photos)
+                    .FirstOrDefaultAsync(o => o.Id == model.Id);
 
-                if (existingSample == null) return NotFound();
+                if (existing == null)
+                {
+                    return Json(new { success = false, message = "Образец не найден" });
+                }
 
                 // Обновляем свойства
-                existingSample.SeriesName = model.SeriesName;
-                existingSample.Name = model.Name;
-                existingSample.SampleTypeId = model.SampleTypeId;
-                existingSample.SampleCreationDate = model.SampleCreationDate;
-                existingSample.RecordDate = model.RecordDate;
-                existingSample.Weight = model.Weight;
-                existingSample.DimensionA = model.DimensionA;
-                existingSample.DimensionB = model.DimensionB;
-                existingSample.DimensionC = model.DimensionC;
-                existingSample.JournalType = model.JournalType;
-                existingSample.Comment = model.Comment;
+                existing.Name = model.Name;
+                existing.SeriesName = model.SeriesName;
+                existing.SampleTypeId = model.SampleTypeId;
+                existing.SampleCreationDate = model.SampleCreationDate;
+                existing.RecordDate = model.RecordDate;
+                existing.Weight = model.Weight;
+                existing.DimensionA = model.DimensionA;
+                existing.DimensionB = model.DimensionB;
+                existing.DimensionC = model.DimensionC;
+                existing.JournalType = model.JournalType;
+                existing.Comment = model.Comment;
 
-                _context.SaveChanges();
-                return Json(new { success = true });
+                // Сохранить изменения
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction("Index");
             }
-
-            return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors) });
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadPhoto(int sampleId, IFormFile file, bool confirm = false)
+        public async Task<IActionResult> UploadPhoto(int sampleId, IFormFile file)
         {
-            var sample = _context.Objects
-                .Include(s => s.SampleType)
-                .FirstOrDefault(s => s.Id == sampleId);
-
-            if (sample == null) return Json(new { success = false, message = "Образец не найден" });
-
             if (file == null || file.Length == 0)
-                return Json(new { success = false, message = "Файл не выбран" });
+                return BadRequest("Файл не выбран");
 
-            try
+            var sample = await _context.Objects.FindAsync(sampleId);
+            if (sample == null) return NotFound("Образец не найден");
+
+            using var memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+
+            var photo = new SamplePhoto
             {
-                // Генерация имени файла
-                var baseName = $"{sample.Name}_{sample.SampleType.Name}_{sample.Id}_{sample.SampleCreationDate:yyyyMMdd}";
-                var fileName = $"{baseName}_{Guid.NewGuid().ToString()[..8]}{Path.GetExtension(file.FileName)}";
+                FileName = $"{sample.Name}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(file.FileName)}",
+                ContentType = file.ContentType,
+                Content = memoryStream.ToArray(),
+                SampleId = sampleId
+            };
 
-                // Если нужно подтверждение - открываем модальное окно
-                if (confirm)
-                {
-                    return Json(new
-                    {
-                        success = false,
-                        requireConfirmation = true,
-                        suggestedName = fileName
-                    });
-                }
+            _context.SamplePhotos.Add(photo);
+            await _context.SaveChangesAsync();
 
-                // Чтение содержимого файла в массив байтов
-                using (var memoryStream = new MemoryStream())
-                {
-                    await file.CopyToAsync(memoryStream);
-                    var content = memoryStream.ToArray();
-
-                    // Сохранение в БД
-                    _context.SamplePhotos.Add(new SamplePhoto
-                    {
-                        FileName = fileName,
-                        ContentType = file.ContentType,
-                        Content = content,
-                        SampleId = sampleId
-                    });
-
-                    await _context.SaveChangesAsync();
-                }
-
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            return Ok();
         }
 
         [HttpPost]
-        public IActionResult DeletePhoto(int id)
+        public async Task<IActionResult> DeletePhoto(int id)
         {
-            var photo = _context.SamplePhotos.Find(id);
-            if (photo == null) return Json(new { success = false, message = "Фото не найдено" });
+            var photo = await _context.SamplePhotos.FindAsync(id);
+            if (photo == null) return NotFound();
 
-            try
-            {
-                // Удаление из БД
-                _context.SamplePhotos.Remove(photo);
-                _context.SaveChanges();
+            _context.SamplePhotos.Remove(photo);
+            await _context.SaveChangesAsync();
 
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            return Ok();
         }
 
-        [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)]
-        [HttpGet("GetPhoto/{id}")]
+        [HttpGet]
         public IActionResult GetPhoto(int id)
         {
             var photo = _context.SamplePhotos.Find(id);
             if (photo == null) return NotFound();
 
-            // Добавляем заголовки для кэширования
-            Response.Headers.Append("Cache-Control", "public, max-age=3600");
-            Response.Headers.Append("Expires", DateTime.UtcNow.AddHours(1).ToString("R"));
-
             return File(photo.Content, photo.ContentType);
+        }
+
+        [HttpGet]
+        public IActionResult GetPhotos(int sampleId)
+        {
+            var photos = _context.SamplePhotos
+                .Where(p => p.SampleId == sampleId)
+                .ToList();
+
+            return PartialView("_SamplePhotos", photos);
         }
 
         [HttpGet]
