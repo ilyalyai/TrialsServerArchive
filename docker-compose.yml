@@ -1,6 +1,11 @@
 services:
   db:
     image: postgres:latest
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U login"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     environment:
       POSTGRES_USER: login
       POSTGRES_PASSWORD: password
@@ -15,11 +20,12 @@ services:
     ports:
       - "2310:2310"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=TrialsServerArchive;Username=login;Password=password
-    command: ["sh", "-c", "sleep 100 && dotnet TrialsServerArchive.dll"]
+    command: ["sh", "-c", "dotnet TrialsServerArchive.dll"]
 
 volumes:
   postgres_data:

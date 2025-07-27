@@ -22,7 +22,6 @@
 1. Представление для журнала образцов (новые атрибуты)
 2. Представление журналов ОБ и РЕС (новые атрибуты, сбор в зависимости от типа журнала)
 3. Генерация протокола испытаний
-Проверка 123
 */
 
 using Microsoft.AspNetCore.Identity;
@@ -39,8 +38,8 @@ builder.WebHost.UseUrls("http://*:2310");
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    //options.UseNpgsql(connectionString));
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
+    //options.UseSqlServer(connectionString));
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
